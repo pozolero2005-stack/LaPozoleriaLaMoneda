@@ -1,0 +1,46 @@
+/* Tarjetas de los tres grandes totales superiores */
+.card-total {
+  background-color: rgba(255, 255, 255, 0.01) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+}
+
+.style-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+}
+
+/* Tarjetas de cada uno de los 12 meses */
+.row-mes {
+  background-color: rgba(255, 255, 255, 0.015) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+/* Meses que sí tienen operaciones contables registradas */
+.row-mes.mes-activo {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-left: 3px solid rgb(220, 214, 35) !important;
+}
+
+.row-mes.mes-activo:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  transform: translateY(-2px);
+}
+
+/* Meses apagados que aún no operan */
+.row-mes.mes-vacio {
+  opacity: 0.4;
+}
+
+/* Textos informativos internos */
+.small-label {
+  font-size: 0.68rem;
+  text-uppercase: true;
+  letter-spacing: 0.3px;
+  margin-bottom: 1px;
+}
+
+.style-amounts {
+  font-size: 0.9rem;
+}

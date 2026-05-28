@@ -1,1 +1,88 @@
-<p>historial-mensual works!</p>
+<main class="container-fluid min-vh-100 py-4 px-md-5">
+  
+  <header class="text-center mb-4">
+    <h1 class="font-weight-bold fs-3 mb-1" style="color: rgb(220, 214, 35);">
+      Historial Contable Mensual
+    </h1>
+    <p class="text-white small text-uppercase" style="letter-spacing: 1px;">La Pozolería • Calendario de Rendimiento</p>
+  </header>
+
+  <section class="row g-2 justify-content-center mb-4" aria-label="Filtros de búsqueda">
+    <div class="col-6 col-sm-4 col-md-3">
+      <select id="selectMes" [(ngModel)]="mesSeleccionado" (change)="alCambiarFiltro()" class="form-select bg-dark text-white border-secondary small-select">
+        <option *ngFor="let m of meses" [value]="m.valor">{{ m.nombre }}</option>
+      </select>
+    </div>
+    
+    <div class="col-6 col-sm-3 col-md-2">
+      <input id="selectAnio" type="number" [(ngModel)]="anioSeleccionado" (change)="alCambiarFiltro()" class="form-control bg-dark text-white border-secondary text-center small-select" min="2020" max="2040">
+    </div>
+  </section>
+
+  <section class="calendar-container p-2 p-md-3 rounded-3 shadow mb-4" style="background-color: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.06);">
+    
+    <div class="row g-1 text-center font-weight-bold text-light text-uppercase mb-2 weekday-header" aria-hidden="true" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+      <div class="col p-1">Lun</div>
+      <div class="col p-1">Mar</div>
+      <div class="col p-1">Mié</div>
+      <div class="col p-1">Jue</div>
+      <div class="col p-1">Vie</div>
+      <div class="col p-1">Sáb</div>
+      <div class="col p-1">Dom</div>
+    </div>
+
+    <div *ngFor="let semana of matrizCalendario" class="row g-1 mb-1">
+      <div *ngFor="let dia of semana" class="col calendar-day-col">
+        
+        <div class="card h-100 border-0 day-card" [ngClass]="{'empty-day': !dia.numeroDia, 'has-data': dia.datosFinancieros}">
+          
+          <div class="card-body p-1 p-md-2 d-flex flex-column justify-content-between position-relative">
+            
+            <div class="d-flex justify-content-between align-items-center w-100 mb-1">
+              <span class="day-number font-weight-bold small">{{ dia.numeroDia }}</span>
+              
+              <button *ngIf="dia.datosFinancieros" type="button" class="btn-clear-day" (click)="eliminarRegistroDia(dia.fechaCompleta, dia.numeroDia)" title="Borrar las cuentas de este día">
+                ✕
+              </button>
+            </div>
+
+            <div *ngIf="dia.datosFinancieros" class="financial-data d-flex flex-column gap-1 w-100 text-end">
+              <div class="item-money text-warning" title="Inversión total">
+                <span class="prefix">I:</span>${{ dia.datosFinancieros.inversionTotal }}
+              </div>
+              <div class="item-money text-danger" title="Merma">
+                <span class="prefix">M:</span>${{ dia.datosFinancieros.merma }}
+              </div>
+              <div class="item-money text-success font-weight-bold" title="Dinero Libre (Ganancia)">
+                <span class="prefix">L:</span>${{ dia.datosFinancieros.libre }}
+              </div>
+            </div>
+
+            <div *ngIf="dia.numeroDia && !dia.datosFinancieros" class="no-data-spacer" aria-hidden="true"></div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="row g-2 p-3 rounded-3 text-start mx-0" style="background-color: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.05)">
+    <div class="col-12 mb-2">
+      <h2 class="h6 text-uppercase text-white m-0 font-weight-bold" style="letter-spacing: 0.5px;">Cierre Total del Mes</h2>
+    </div>
+    <div class="col-4 text-center border-end border-secondary">
+      <span class="d-block text-white style-label">Inversión Total</span>
+      <strong class="text-warning fs-5">${{ totalInversionMensual.toFixed(2) }}</strong>
+    </div>
+    <div class="col-4 text-center border-end border-secondary">
+      <span class="d-block text-white style-label">Merma Acumulada</span>
+      <strong class="text-danger fs-5">${{ totalMermaMensual.toFixed(2) }}</strong>
+    </div>
+    <div class="col-4 text-center">
+      <span class="d-block text-white style-label">Ganancia Neta</span>
+      <strong class="text-success fs-5">${{ totalGananciaMensual.toFixed(2) }}</strong>
+    </div>
+  </footer>
+
+</main>

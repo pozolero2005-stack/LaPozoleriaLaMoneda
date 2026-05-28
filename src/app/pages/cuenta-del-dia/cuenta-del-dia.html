@@ -1,107 +1,175 @@
 <main class="container min-vh-100 d-flex flex-column align-items-center py-5">
   
-  <section class="log-book-container w-100 p-3 p-md-4" style="max-width: 700px;">
+  <section class="log-book-container w-100 p-3 p-md-4" style="max-width: 780px;">
     
     <header class="log-book-header text-center mb-5">
       <h1 class="font-weight-bold fs-2 mb-2" style="color: rgb(220, 214, 35);">
-        Registro Diario de Jornada
+        Registro de Jornada - La Pozolería La Moneda
       </h1>
-      <p class="text-muted h6 font-weight-light uppercase" style="letter-spacing: 1px;">La Pozolería • Libro de Cuentas</p>
+      <p class="text-white h6 font-weight-light text-uppercase" style="letter-spacing: 1px;">Libro de Cuentas por Variedad de Producto</p>
     </header>
     
     <form [formGroup]="formularioFinanciero" (ngSubmit)="guardarDia()" aria-label="Formulario de balance financiero diario">
       
       <div class="date-header text-center mb-5">
-        <label for="fecha" class="form-label d-block small uppercase text-muted font-weight-bold" style="letter-spacing: 0.5px;">Fecha de la Jornada</label>
+        <label for="fecha" class="form-label d-block small text-uppercase text-white font-weight-bold" style="letter-spacing: 0.5px;">Fecha de la Jornada</label>
         <input type="date" id="fecha" formControlName="fecha" class="form-control text-center date-input bg-transparent text-white p-0 h3 font-weight-bold" required>
-        <hr class="border-secondary mt-2 mb-0" style="width: 150px; margin: 0 auto;">
+        <hr class="border-secondary mt-2 mb-0" style="width: 150px; margin: 0 auto;" aria-hidden="true">
       </div>
 
       <fieldset class="input-set mb-5 border-0 p-0">
-        <legend class="h6 uppercase mb-4 pb-2 border-bottom border-secondary font-weight-bold" style="color: #ff4d4d; letter-spacing: 1px;">1. Costos y Merma del Día</legend>
-        <div class="log-rows-container">
-          
-          <div class="row align-items-center mb-3">
-            <div class="col-6">
-              <label for="inversion" class="label-text small">Inversión (Suma de Insumos)</label>
-            </div>
-            <div class="col-6">
-              <div class="log-input-wrapper">
-                <span class="currency-symbol">$</span>
-                <input type="number" id="inversion" formControlName="inversion" class="form-control log-input" min="0">
-              </div>
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+          <legend class="h6 text-uppercase m-0 font-weight-bold" style="color: #4da6ff; letter-spacing: 1px;">1. Control de Vasos Vendidos</legend>
+          <button type="button" class="btn btn-sm btn-outline-secondary text-uppercase px-2 font-weight-bold" style="font-size: 0.7rem; border-radius: 4px;" (click)="actualizarPreciosBase()" title="Fijar estos precios como valores por defecto">
+            Fijar Precios Actuales
+          </button>
+        </div>
+
+        <div class="row mb-2 text-white small text-center uppercase font-weight-bold d-none d-md-flex" aria-hidden="true">
+          <div class="col-md-5 text-start">Variedad de Pozol</div>
+          <div class="col-md-3">Cant. Vasos</div>
+          <div class="col-md-4">Precio Unitario ($)</div>
+        </div>
+
+        <div class="row align-items-center mb-3">
+          <div class="col-12 col-md-5 mb-1 mb-md-0">
+            <label for="vasosCacao" class="label-text small d-block font-weight-bold" style="color: #d2b48c;">Pozol de Cacao</label>
+          </div>
+          <div class="col-6 col-md-3">
+            <input type="number" id="vasosCacao" formControlName="vasosCacao" class="form-control log-input text-center" min="0" placeholder="Vasos">
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="log-input-wrapper">
+              <span class="currency-symbol" aria-hidden="true">$</span>
+              <input type="number" id="precioCacao" formControlName="precioCacao" class="form-control log-input text-end" min="0">
             </div>
           </div>
-          
-          <div class="row align-items-center mb-3">
-            <div class="col-6">
-              <label for="merma" class="label-text small">Merma (Vasos / Consumo)</label>
-            </div>
-            <div class="col-6">
-              <div class="log-input-wrapper">
-                <span class="currency-symbol">$</span>
-                <input type="number" id="merma" formControlName="merma" class="form-control log-input" min="0">
-              </div>
+        </div>
+
+        <div class="row align-items-center mb-3">
+          <div class="col-12 col-md-5 mb-1 mb-md-0">
+            <label for="vasosCacahuate" class="label-text small d-block font-weight-bold" style="color: #f4a460;">Pozol de Cacahuate</label>
+          </div>
+          <div class="col-6 col-md-3">
+            <input type="number" id="vasosCacahuate" formControlName="vasosCacahuate" class="form-control log-input text-center" min="0" placeholder="Vasos">
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="log-input-wrapper">
+              <span class="currency-symbol" aria-hidden="true">$</span>
+              <input type="number" id="precioCacahuate" formControlName="precioCacahuate" class="form-control log-input text-end" min="0">
             </div>
           </div>
-        
+        </div>
+
+        <div class="row align-items-center mb-4">
+          <div class="col-12 col-md-5 mb-1 mb-md-0">
+            <label for="vasosBlanco" class="label-text small d-block font-weight-bold" style="color: #f5f5f5;">Pozol Blanco</label>
+          </div>
+          <div class="col-6 col-md-3">
+            <input type="number" id="vasosBlanco" formControlName="vasosBlanco" class="form-control log-input text-center" min="0" placeholder="Vasos">
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="log-input-wrapper">
+              <span class="currency-symbol" aria-hidden="true">$</span>
+              <input type="number" id="precioBlanco" formControlName="precioBlanco" class="form-control log-input text-end" min="0">
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-secondary my-4" aria-hidden="true">
+
+        <div class="row align-items-center mb-2">
+          <div class="col-6">
+            <label for="ventaElectronica" class="label-text small">Venta Digital (Tarjeta o Transferencia)</label>
+          </div>
+          <div class="col-6">
+            <div class="log-input-wrapper">
+              <span class="currency-symbol" aria-hidden="true">$</span>
+              <input type="number" id="ventaElectronica" formControlName="ventaElectronica" class="form-control log-input text-end" min="0" placeholder="0">
+            </div>
+          </div>
         </div>
       </fieldset>
 
       <fieldset class="input-set mb-5 border-0 p-0">
-        <legend class="h6 uppercase mb-4 pb-2 border-bottom border-secondary font-weight-bold" style="color: #4da6ff; letter-spacing: 1px;">2. Flujo e Ingresos de Ruta</legend>
-        <div class="log-rows-container">
-          
-          <div class="row align-items-center mb-3">
-            <div class="col-6">
-              <label for="cajaInicial" class="label-text small">Cambio Inicial (Caja Chica)</label>
-            </div>
-            <div class="col-6">
-              <div class="log-input-wrapper">
-                <span class="currency-symbol">$</span>
-                <input type="number" id="cajaInicial" formControlName="cajaInicial" class="form-control log-input" min="0">
-              </div>
-            </div>
-          </div>
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+          <legend class="h6 text-uppercase m-0 font-weight-bold" style="color: #ffb347; letter-spacing: 1px;">2. Desglose de Gastos del Día (Inversión)</legend>
+          <button type="button" class="btn btn-sm btn-outline-warning text-uppercase px-3 font-weight-bold" style="font-size: 0.75rem;" (click)="anadirGasto()">
+            + Añadir Gasto
+          </button>
+        </div>
 
-          <div class="row align-items-center mb-3">
+        <div formArrayName="listaGastos">
+          <div *ngFor="let gasto of listaGastosControls; let i = index" [formGroupName]="i" class="row align-items-center mb-2 dynamic-row">
             <div class="col-6">
-              <label for="ventaEfectivo" class="label-text small">Venta Total en Efectivo</label>
+              <input type="text" formControlName="concepto" class="form-control log-input-table" placeholder="Ej. Barra de Hielo / Azúcar" aria-label="Concepto del gasto">
             </div>
-            <div class="col-6">
+            <div class="col-4">
               <div class="log-input-wrapper">
-                <span class="currency-symbol">$</span>
-                <input type="number" id="ventaEfectivo" formControlName="ventaEfectivo" class="form-control log-input" min="0">
+                <span class="currency-symbol" aria-hidden="true">$</span>
+                <input type="number" formControlName="costo" class="form-control log-input-table text-end" placeholder="0" min="0" aria-label="Costo del gasto">
               </div>
             </div>
-          </div>
-
-          <div class="row align-items-center mb-3">
-            <div class="col-6">
-              <label for="ventaElectronica" class="label-text small">Venta Electrónica (Tarjeta)</label>
-            </div>
-            <div class="col-6">
-              <div class="log-input-wrapper">
-                <span class="currency-symbol">$</span>
-                <input type="number" id="ventaElectronica" formControlName="ventaElectronica" class="form-control log-input" min="0">
-              </div>
+            <div class="col-2 text-center">
+              <button type="button" class="btn-delete" (click)="eliminarGasto(i)" title="Eliminar este gasto">✕</button>
             </div>
           </div>
-        
         </div>
       </fieldset>
 
-      <div class="final-balance p-4 rounded-3 text-center border border-success" style="background-color: rgba(25, 135, 84, 0.03);" role="region" aria-live="polite" aria-label="Cálculo de ganancia neta">
-        <label for="libre" class="form-label uppercase small font-weight-bold mb-3 d-block text-success" style="letter-spacing: 1px;">Dinero Libre (Ganancia Neta)</label>
-        <div class="balance-display d-flex justify-content-center align-items-baseline">
-          <span class="currency-symbol-final fs-2 font-weight-bold me-1" style="color: #198754;">$</span>
-          <input type="number" id="libre" formControlName="libre" class="bg-transparent text-success border-0 text-center font-weight-bold h1 m-0 p-0 fs-1 readonly-input" readonly>
+      <fieldset class="input-set mb-5 border-0 p-0">
+        <legend class="h6 text-uppercase mb-4 pb-2 border-bottom border-secondary font-weight-bold" style="color: #ff4d4d; letter-spacing: 1px;">3. Base de Cambio y Mermas</legend>
+        
+        <div class="row align-items-center mb-3">
+          <div class="col-6">
+            <label for="merma" class="label-text small">Merma del Día (Pérdida en dinero)</label>
+          </div>
+          <div class="col-6">
+            <div class="log-input-wrapper">
+              <span class="currency-symbol" aria-hidden="true">$</span>
+              <input type="number" id="merma" formControlName="merma" class="form-control log-input text-end" min="0" placeholder="0">
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="d-grid gap-2 pt-4">
-        <button type="submit" class="btn btn-success btn-lg font-weight-bold uppercase py-3 fs-5" style="border-radius: 6px;">
-          Guardar Jornada Financiera
+        <div class="row align-items-center mb-3">
+          <div class="col-6">
+            <label for="cajaInicial" class="label-text small">Fondo de Cambio Inicial (Caja Chica)</label>
+          </div>
+          <div class="col-6">
+            <div class="log-input-wrapper">
+              <span class="currency-symbol" aria-hidden="true">$</span>
+              <input type="number" id="cajaInicial" formControlName="cajaInicial" class="form-control log-input text-end" min="0" placeholder="0">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="mb-5 border-0 p-4 rounded-3 text-start" style="background-color: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.05)">
+        <legend class="h6 text-uppercase mb-3 font-weight-bold text-muted" style="letter-spacing: 1px;">Resumen de la Jornada</legend>
+        
+        <div class="d-flex justify-content-between mb-2 small text-light">
+          <span>Venta Bruta Acumulada (Suma de las 3 variedades + Digital):</span>
+          <span class="font-weight-bold text-info">${{ formularioFinanciero.get('ventaBruta')?.value }}</span>
+        </div>
+        
+        <div class="d-flex justify-content-between mb-3 small text-light">
+          <span>Inversión del Día (Suma de Insumos):</span>
+          <span class="font-weight-bold text-warning">${{ formularioFinanciero.get('inversionTotal')?.value }}</span>
+        </div>
+
+        <div class="final-balance-box p-3 rounded text-center border border-success mt-3" style="background-color: rgba(25, 135, 84, 0.03);" role="region" aria-live="polite">
+          <label for="libre" class="form-label text-uppercase small font-weight-bold mb-2 d-block text-success">Dinero Libre (Ganancia Neta Final)</label>
+          <div class="d-flex justify-content-center align-items-baseline">
+            <span class="fs-2 font-weight-bold me-1 text-success" aria-hidden="true">$</span>
+            <input type="number" id="libre" formControlName="libre" class="bg-transparent text-success border-0 text-center font-weight-bold h1 m-0 p-0 fs-2 readonly-input" readonly>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-success btn-lg text-uppercase font-weight-bold py-3 fs-6" style="border-radius: 6px; letter-spacing: 0.5px;">
+          Guardar Registro Diario
         </button>
       </div>
 

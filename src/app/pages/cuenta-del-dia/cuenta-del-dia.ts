@@ -1,109 +1,168 @@
 import { Component, OnInit } from '@angular/core';
-// 1. Importamos las herramientas esenciales de formularios reactivos
-import { FormGroup, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormControl, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-cuenta-del-dia',
   standalone: true,
-  // Aseguramos que el módulo esté inyectado en este componente autónomo
-  imports: [ReactiveFormsModule], 
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './cuenta-del-dia.html',
   styleUrl: './cuenta-del-dia.css'
 })
 export class CuentaDelDia implements OnInit {
   
-  // 1. Declaración de la variable maestra del formulario
   formularioFinanciero!: FormGroup;
 
   ngOnInit(): void {
-    // 2. Definición del plano del formulario con sus valores iniciales y validaciones
+    // REGLA DE NEGOCIO: Cargamos los precios base de los 3 productos desde el LocalStorage.
+    // Si no existen en la memoria, asignamos precios sugeridos por defecto (35, 40 y 30).
+    const preciosGuardados = localStorage.getItem('preciosBasePozol');
+    const precios = preciosGuardados ? JSON.parse(preciosGuardados) : { cacao: 35, cacahuate: 40, blanco: 30 };
+
     this.formularioFinanciero = new FormGroup({
       fecha: new FormControl('', [Validators.required]),
-      inversion: new FormControl(0, [Validators.required, Validators.min(0)]),
-      merma: new FormControl(0, [Validators.required, Validators.min(0)]),
-      ventaEfectivo: new FormControl(0, [Validators.required, Validators.min(0)]),
+      
+      // PRODUCTO 1: CACAO
+      vasosCacao: new FormControl(0, [Validators.required, Validators.min(0)]),
+      precioCacao: new FormControl(precios.cacao, [Validators.required, Validators.min(0)]),
+      
+      // PRODUCTO 2: CACAHUATE
+      vasosCacahuate: new FormControl(0, [Validators.required, Validators.min(0)]),
+      precioCacahuate: new FormControl(precios.cacahuate, [Validators.required, Validators.min(0)]),
+      
+      // PRODUCTO 3: BLANCO
+      vasosBlanco: new FormControl(0, [Validators.required, Validators.min(0)]),
+      precioBlanco: new FormControl(precios.blanco, [Validators.required, Validators.min(0)]),
+      
+      // OTRAS VENTAS DIGITALES
       ventaElectronica: new FormControl(0, [Validators.required, Validators.min(0)]),
+      
+      // TABLA DINÁMICA DE INSUMOS
+      listaGastos: new FormArray([]),
+      
+      // MERMA Y LOGÍSTICA
+      merma: new FormControl(0, [Validators.required, Validators.min(0)]),
       cajaInicial: new FormControl(0, [Validators.required, Validators.min(0)]),
       
-      // El campo 'libre' nace explícitamente deshabilitado
+      // TOTALES AUTOMÁTICOS
+      inversionTotal: new FormControl({ value: 0, disabled: true }),
+      ventaBruta: new FormControl({ value: 0, disabled: true }),
       libre: new FormControl({ value: 0, disabled: true })
     });
 
-    // 3. Configuración del "escuchador" reactivo para detectar cambios en tiempo real
+    this.anadirGasto();
+
+    // Escuchador reactivo para volver a calcular el balance con cada tecla que presiones
     this.formularioFinanciero.valueChanges.subscribe(() => {
-      this.calcularGananciaLimpia();
+      this.realizarCalculosDelDia();
     });
   }
 
-  // 4. Función de cálculo automático (La Calculadora del Negocio)
-  calcularGananciaLimpia(): void {
-    // Recuperamos todos los valores (incluyendo el campo deshabilitado 'libre')
+  // FUNCIÓN PARA FIJAR LOS PRECIOS ACTUALES DE LOS 3 PRODUCTOS DE FORMA PERMANENTE
+  actualizarPreciosBase(): void {
+    const vals = this.formularioFinanciero.value;
+    
+    if (vals.precioCacao > 0 && vals.precioCacahuate > 0 && vals.precioBlanco > 0) {
+      const nuevosPrecios = {
+        cacao: vals.precioCacao,
+        cacahuate: vals.precioCacahuate,
+        blanco: vals.precioBlanco
+      };
+      localStorage.setItem('preciosBasePozol', JSON.stringify(nuevosPrecios));
+      alert('¡Excelente! Los precios de las tres variedades han sido guardados como predeterminados.');
+    } else {
+      alert('Por favor, introduce precios válidos mayores a 0 antes de guardar.');
+    }
+  }
+
+  get listaGastosControls() {
+    return (this.formularioFinanciero.get('listaGastos') as FormArray).controls;
+  }
+
+  anadirGasto(): void {
+    const lista = this.formularioFinanciero.get('listaGastos') as FormArray;
+    lista.push(new FormGroup({
+      concepto: new FormControl('', [Validators.required]),
+      costo: new FormControl(0, [Validators.required, Validators.min(0)])
+    }));
+  }
+
+  eliminarGasto(index: number): void {
+    const lista = this.formularioFinanciero.get('listaGastos') as FormArray;
+    if (lista.length > 1) {
+      lista.removeAt(index);
+    } else {
+      lista.at(0).reset({ concepto: '', costo: 0 });
+    }
+  }
+
+  realizarCalculosDelDia(): void {
     const valores = this.formularioFinanciero.getRawValue();
 
-    // Forzamos el tipado estricto convirtiendo las entradas web a tipo Number
-    const inversion = Number(valores.inversion);
-    const merma = Number(valores.merma);
-    const ventaEfectivo = Number(valores.ventaEfectivo);
-    const ventaElectronica = Number(valores.ventaElectronica);
-    const cajaInicial = Number(valores.cajaInicial);
+    // 1. Calcular Venta de cada Pozol (Vasos * Precio)
+    const totalCacao = Number(valores.vasosCacao || 0) * Number(valores.precioCacao || 0);
+    const totalCacahuate = Number(valores.vasosCacahuate || 0) * Number(valores.precioCacahuate || 0);
+    const totalBlanco = Number(valores.vasosBlanco || 0) * Number(valores.precioBlanco || 0);
 
-    // Aplicamos tus reglas de negocio:
-    // Restamos el dinero base de cambio a las ventas físicas para conocer la venta neta en efectivo
-    const ventaEfectivoReal = ventaEfectivo - cajaInicial; 
-    const ingresosTotales = ventaEfectivoReal + ventaElectronica;
+    // 2. Sumar total de efectivo + ventas electrónicas = Venta Bruta
+    const ventaEfectivoTotal = totalCacao + totalCacahuate + totalBlanco;
+    const ventaBrutaTotal = ventaEfectivoTotal + Number(valores.ventaElectronica || 0);
 
-    // Balance final de las ganancias del día
-    const resultadoLibre = ingresosTotales - inversion - merma;
+    // 3. Sumar la lista dinámica de gastos (Inversión)
+    let sumaGastos = 0;
+    const arrayGastos = valores.listaGastos || [];
+    for (let gasto of arrayGastos) {
+      sumaGastos += Number(gasto.costo || 0);
+    }
 
-    // Inyectamos el resultado formateado estrictamente a dos decimales
-    // 'emitEvent: false' es vital para evitar que el formulario se vuelva a escuchar a sí mismo y se cicle
+    // 4. Dinero Libre = Venta Bruta - Inversión - Merma - Caja Inicial
+    const merma = Number(valores.merma || 0);
+    const cajaInicial = Number(valores.cajaInicial || 0);
+    const resultadoLibre = ventaBrutaTotal - sumaGastos - merma - cajaInicial;
+
     this.formularioFinanciero.patchValue({
+      inversionTotal: Number(sumaGastos.toFixed(2)),
+      ventaBruta: Number(ventaBrutaTotal.toFixed(2)),
       libre: Number(resultadoLibre.toFixed(2))
     }, { emitEvent: false });
   }
 
-  // 5. Función de persistencia para guardar los datos en el LocalStorage
   guardarDia(): void {
-    // Verificación de seguridad: si faltan datos obligatorios, frenamos el guardado
     if (this.formularioFinanciero.invalid) {
-      alert('Por favor, llena todos los campos correctamente con valores válidos.');
+      alert('Por favor, revisa que todos los campos requeridos estén llenos antes de guardar.');
       return;
     }
 
-    // Extraemos la información del formulario
     const nuevoRegistro = this.formularioFinanciero.getRawValue();
-
-    // LEER: Intentamos recuperar el historial existente en LocalStorage
     const datosLocales = localStorage.getItem('historialPozol');
-    
-    // VALIDACIÓN DE ESTADO VACÍO: Si devuelve null, inicializamos un array vacío []
     let listaDias: any[] = datosLocales ? JSON.parse(datosLocales) : [];
 
-    // VALIDACIÓN DE EXISTENCIA: Evitamos registrar dos veces la misma jornada
     const fechaExiste = listaDias.some(dia => dia.fecha === nuevoRegistro.fecha);
-
     if (fechaExiste) {
-      alert('Esta fecha ya se encuentra registrada en el sistema. Utiliza la opción de Modificar si deseas editarla.');
-      return; 
+      alert('Esta fecha ya cuenta con un registro en el historial.');
+      return;
     }
 
-    // CREAR: Añadimos el nuevo objeto de la jornada al array
     listaDias.push(nuevoRegistro);
-
-    // SERIALIZAR: Transformamos el array actualizado a formato de texto plano y lo guardamos
     localStorage.setItem('historialPozol', JSON.stringify(listaDias));
-
-    alert('¡Jornada financiera guardada con éxito!');
+    alert('¡Jornada guardada con éxito en el sistema!');
     
-    // LIMPIAR: Reseteamos el formulario a su estado original para el día siguiente
+    // Al limpiar, recuperamos los precios vigentes de la memoria
+    const preciosGuardados = localStorage.getItem('preciosBasePozol');
+    const precios = preciosGuardados ? JSON.parse(preciosGuardados) : { cacao: 35, cacahuate: 40, blanco: 30 };
+
+    const lista = this.formularioFinanciero.get('listaGastos') as FormArray;
+    while (lista.length !== 0) {
+      lista.removeAt(0);
+    }
+    
     this.formularioFinanciero.reset({
       fecha: '',
-      inversion: 0,
-      merma: 0,
-      ventaEfectivo: 0,
-      ventaElectronica: 0,
-      cajaInicial: 0,
-      libre: 0
+      vasosCacao: 0, precioCacao: precios.cacao,
+      vasosCacahuate: 0, precioCacahuate: precios.cacahuate,
+      vasosBlanco: 0, precioBlanco: precios.blanco,
+      ventaElectronica: 0, merma: 0, cajaInicial: 0, inversionTotal: 0, ventaBruta: 0, libre: 0
     });
+    this.anadirGasto();
   }
 }

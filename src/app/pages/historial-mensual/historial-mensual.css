@@ -1,0 +1,101 @@
+/* Altura adaptativa de las celdas contables */
+.calendar-day-col {
+  min-width: 0;
+  min-height: 85px;
+}
+
+@media (min-width: 768px) {
+  .calendar-day-col {
+    min-height: 115px;
+  }
+}
+
+/* Tarjetas de cada celda */
+.day-card {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-radius: 6px !important;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.day-card.has-data {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(220, 214, 35, 0.15) !important;
+}
+
+.day-card.has-data:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.day-card.empty-day {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  pointer-events: none;
+}
+
+/* Tipografía de números */
+.day-number {
+  color: rgba(224, 212, 212, 0.825);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+.has-data .day-number {
+  color: #ffffff;
+}
+
+/* NUEVO: Botón interactivo para eliminar un día individual */
+.btn-clear-day {
+  background: transparent;
+  border: none;
+  color: rgba(255, 77, 77, 0.4);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+.btn-clear-day:hover {
+  color: #ff4d4d;
+  transform: scale(1.2);
+}
+
+/* Estilos compactos para los montos financieros */
+.item-money {
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.3px;
+}
+
+@media (min-width: 768px) {
+  .item-money {
+    font-size: 0.8rem;
+  }
+}
+
+.item-money .prefix {
+  opacity: 0.3;
+  margin-right: 2px;
+  font-weight: normal;
+  color: #ffffff !important;
+}
+
+.small-select {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.style-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+@media (min-width: 768px) {
+  .style-label {
+    font-size: 0.8rem;
+  }
+}
