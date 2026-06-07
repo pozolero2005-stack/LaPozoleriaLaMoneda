@@ -35,15 +35,24 @@ export class HistorialMensual implements OnInit {
     this.cargarYConstruirCalendario();
   }
 
+  // Función para extraer solo YYYY-MM-DD
+  private normalizarFecha(fecha: string): string {
+    return fecha.split('T')[0];
+  }
+
   async cargarYConstruirCalendario(): Promise<void> {
     const mesStr = (this.mesSeleccionado + 1).toString().padStart(2, '0');
+    
     const { data: registros, error } = await this.supabaseService.supabase
       .from('cuentas_diarias')
       .select('*')
       .gte('fecha', `${this.anioSeleccionado}-${mesStr}-01`)
       .lte('fecha', `${this.anioSeleccionado}-${mesStr}-31`);
 
-    if (error) { console.error("Error Supabase:", error); return; }
+    if (error) { 
+      console.error("Error al conectar con Supabase:", error); 
+      return; 
+    }
 
     this.totalInversionMensual = 0;
     this.totalMermaMensual = 0;
@@ -53,7 +62,7 @@ export class HistorialMensual implements OnInit {
     const totalDiasMes = new Date(this.anioSeleccionado, this.mesSeleccionado + 1, 0).getDate();
     let indiceInicioSemana = primerDiaMes === 0 ? 6 : primerDiaMes - 1;
     let diasContador = 1;
-    const nuevasSemanas: any[][] = [];
+    this.matrizCalendario = [];
 
     for (let i = 0; i < 6; i++) {
       const renglonSemana: any[] = [];
@@ -62,7 +71,9 @@ export class HistorialMensual implements OnInit {
           renglonSemana.push({ numeroDia: null });
         } else {
           const fechaBuscada = `${this.anioSeleccionado}-${mesStr}-${diasContador.toString().padStart(2, '0')}`;
-          const registro = registros?.find(r => r.fecha === fechaBuscada);
+          
+          // Comparamos usando la fecha normalizada para evitar errores de zona horaria
+          const registro = registros?.find(r => this.normalizarFecha(r.fecha) === fechaBuscada);
 
           if (registro) {
             this.totalInversionMensual += Number(registro.inversion_total || 0);
@@ -82,10 +93,9 @@ export class HistorialMensual implements OnInit {
           diasContador++;
         }
       }
-      nuevasSemanas.push(renglonSemana);
+      this.matrizCalendario.push(renglonSemana);
       if (diasContador > totalDiasMes) break;
     }
-    this.matrizCalendario = nuevasSemanas;
   }
 
   async eliminarRegistroDia(fecha: string, dia: number): Promise<void> {
