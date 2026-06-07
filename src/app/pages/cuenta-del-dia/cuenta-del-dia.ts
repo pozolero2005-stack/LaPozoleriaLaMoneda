@@ -132,13 +132,21 @@ export class CuentaDelDia implements OnInit {
     const todoElFormulario = this.formularioFinanciero.getRawValue();
 
     // Separamos los datos para la libreta grande (resumen del día) según las columnas exactas de tu tabla SQL
-   const datosDia = {
-  fecha: todoElFormulario.fecha,         // <--- Ahora sí coincide con tu SQL
+ // Ajusta tu función guardarDia() en cuenta-del-dia.ts
+const datosDia = {
+  fecha: todoElFormulario.fecha,           // Debe ser igual a la columna DATE
+  vasos_cacao: todoElFormulario.vasosCacao,
+  precio_cacao: todoElFormulario.precioCacao,
+  vasos_cacahuate: todoElFormulario.vasosCacahuate,
+  precio_cacahuate: todoElFormulario.precioCacahuate,
+  vasos_blanco: todoElFormulario.vasosBlanco,
+  precio_blanco: todoElFormulario.precioBlanco,
+  venta_electronica: todoElFormulario.ventaElectronica,
+  merma: todoElFormulario.merma,
   caja_inicial: todoElFormulario.cajaInicial,
   inversion_total: todoElFormulario.inversionTotal,
   venta_bruta: todoElFormulario.ventaBruta,
   libre: todoElFormulario.libre
-  // Nota: No incluí "created_at" porque tu tabla lo genera solo (DEFAULT now())
 };
 
     // Separamos la lista de gastos detallados para la libreta chica
