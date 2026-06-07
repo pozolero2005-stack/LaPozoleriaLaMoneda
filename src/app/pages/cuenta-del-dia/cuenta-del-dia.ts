@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { SupabaseService } from '../../services/supabase'; // <-- 1. IMPORTAMOS AL TELEFONISTA
+import { SupabaseService } from '../../services/supabase';
 
 @Component({
   selector: 'app-cuenta-del-dia',
@@ -14,40 +14,31 @@ export class CuentaDelDia implements OnInit {
   
   formularioFinanciero!: FormGroup;
 
-  // 2. LLAMAMOS AL TELEFONISTA AL CONSTRUCTOR PARA QUE ESTÉ DISPONIBLE EN LA PÁGINA
   constructor(private supabaseService: SupabaseService) {}
 
   ngOnInit(): void {
-    // REGLA DE NEGOCIO: Mantenemos el localStorage SOLO para recordar tus precios sugeridos en pantalla
     const preciosGuardados = localStorage.getItem('preciosBasePozol');
     const precios = preciosGuardados ? JSON.parse(preciosGuardados) : { cacao: 35, cacahuate: 40, blanco: 30 };
 
     this.formularioFinanciero = new FormGroup({
       fecha: new FormControl('', [Validators.required]),
       
-      // PRODUCTO 1: CACAO
       vasosCacao: new FormControl(0, [Validators.required, Validators.min(0)]),
       precioCacao: new FormControl(precios.cacao, [Validators.required, Validators.min(0)]),
       
-      // PRODUCTO 2: CACAHUATE
       vasosCacahuate: new FormControl(0, [Validators.required, Validators.min(0)]),
       precioCacahuate: new FormControl(precios.cacahuate, [Validators.required, Validators.min(0)]),
       
-      // PRODUCTO 3: BLANCO
       vasosBlanco: new FormControl(0, [Validators.required, Validators.min(0)]),
       precioBlanco: new FormControl(precios.blanco, [Validators.required, Validators.min(0)]),
       
-      // OTRAS VENTAS DIGITALES
       ventaElectronica: new FormControl(0, [Validators.required, Validators.min(0)]),
       
-      // TABLA DINÁMICA DE INSUMOS
       listaGastos: new FormArray([]),
       
-      // MERMA Y LOGÍSTICA
       merma: new FormControl(0, [Validators.required, Validators.min(0)]),
       cajaInicial: new FormControl(0, [Validators.required, Validators.min(0)]),
       
-      // TOTALES AUTOMÁTICOS
       inversionTotal: new FormControl({ value: 0, disabled: true }),
       ventaBruta: new FormControl({ value: 0, disabled: true }),
       libre: new FormControl({ value: 0, disabled: true })
@@ -69,9 +60,9 @@ export class CuentaDelDia implements OnInit {
         blanco: vals.precioBlanco
       };
       localStorage.setItem('preciosBasePozol', JSON.stringify(nuevosPrecios));
-      alert('¡Excelente! Los precios de las tres variedades han sido guardados como predeterminados.');
+      alert('¡Excelente! Los precios han sido guardados como predeterminados.');
     } else {
-      alert('Por favor, introduce precios válidos mayores a 0 antes de guardar.');
+      alert('Por favor, introduce precios válidos mayores a 0.');
     }
   }
 
@@ -122,45 +113,40 @@ export class CuentaDelDia implements OnInit {
     }, { emitEvent: false });
   }
 
-  // 3. LA NUEVA FUNCIÓN ASÍNCRONA QUE CONECTA AL BANCO DE SUPABASE
   async guardarDia(): Promise<void> {
     if (this.formularioFinanciero.invalid) {
-      alert('Por favor, revisa que todos los campos requeridos estén llenos antes de guardar.');
+      alert('Por favor, revisa que todos los campos requeridos estén llenos.');
       return;
     }
 
     const todoElFormulario = this.formularioFinanciero.getRawValue();
 
-    // Separamos los datos para la libreta grande (resumen del día) según las columnas exactas de tu tabla SQL
- // Ajusta tu función guardarDia() en cuenta-del-dia.ts
-const datosDia = {
-  fecha: todoElFormulario.fecha,           // Debe ser igual a la columna DATE
-  vasos_cacao: todoElFormulario.vasosCacao,
-  precio_cacao: todoElFormulario.precioCacao,
-  vasos_cacahuate: todoElFormulario.vasosCacahuate,
-  precio_cacahuate: todoElFormulario.precioCacahuate,
-  vasos_blanco: todoElFormulario.vasosBlanco,
-  precio_blanco: todoElFormulario.precioBlanco,
-  venta_electronica: todoElFormulario.ventaElectronica,
-  merma: todoElFormulario.merma,
-  caja_inicial: todoElFormulario.cajaInicial,
-  inversion_total: todoElFormulario.inversionTotal,
-  venta_bruta: todoElFormulario.ventaBruta,
-  libre: todoElFormulario.libre
-};
+    // Filtramos gastos válidos para evitar errores en Supabase
+    const listaGastosValidos = (todoElFormulario.listaGastos || [])
+      .filter((g: any) => g.concepto && g.concepto.trim() !== '' && g.costo > 0);
 
-    // Separamos la lista de gastos detallados para la libreta chica
-    const listaGastos = todoElFormulario.listaGastos;
-    
-    console.log("Datos que viajan a la nube:", datosDia);
+    const datosDia = {
+      fecha: todoElFormulario.fecha,
+      vasos_cacao: todoElFormulario.vasosCacao,
+      precio_cacao: todoElFormulario.precioCacao,
+      vasos_cacahuate: todoElFormulario.vasosCacahuate,
+      precio_cacahuate: todoElFormulario.precioCacahuate,
+      vasos_blanco: todoElFormulario.vasosBlanco,
+      precio_blanco: todoElFormulario.precioBlanco,
+      venta_electronica: todoElFormulario.ventaElectronica,
+      merma: todoElFormulario.merma,
+      caja_inicial: todoElFormulario.cajaInicial,
+      inversion_total: todoElFormulario.inversionTotal,
+      venta_bruta: todoElFormulario.ventaBruta,
+      libre: todoElFormulario.libre
+    };
 
     try {
-      // Mandamos al Telefonista a realizar el viaje seguro a Supabase
-      await this.supabaseService.guardarCuentaDiaria(datosDia, listaGastos);
+      await this.supabaseService.guardarCuentaDiaria(datosDia, listaGastosValidos);
       
-      alert('¡Jornada guardada con éxito TOTAL en la base de datos en la nube!');
+      alert('¡Jornada guardada con éxito!');
 
-      // RESET DEL FORMULARIO TRAS EL ÉXITO
+      // Reset del formulario
       const preciosGuardados = localStorage.getItem('preciosBasePozol');
       const precios = preciosGuardados ? JSON.parse(preciosGuardados) : { cacao: 35, cacahuate: 40, blanco: 30 };
 

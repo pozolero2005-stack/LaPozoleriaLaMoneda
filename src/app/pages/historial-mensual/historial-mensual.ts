@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SupabaseService } from '../../services/supabase';
 
 @Component({
   selector: 'app-historial-mensual',
@@ -25,92 +26,92 @@ export class HistorialMensual implements OnInit {
 
   matrizCalendario: any[][] = [];
   
-  // Totales acumulados del mes
   totalInversionMensual = 0;
   totalMermaMensual = 0;
   totalGananciaMensual = 0;
+
+  constructor(private supabaseService: SupabaseService) {}
 
   ngOnInit(): void {
     const fechaActual = new Date();
     this.mesSeleccionado = fechaActual.getMonth();
     this.anioSeleccionado = fechaActual.getFullYear();
-
     this.cargarYConstruirCalendario();
   }
 
-  cargarYConstruirCalendario(): void {
-    const datosLocales = localStorage.getItem('historialPozol');
-    const registrosDias: any[] = datosLocales ? JSON.parse(datosLocales) : [];
+  async cargarYConstruirCalendario(): Promise<void> {
+    const mesStr = (this.mesSeleccionado + 1).toString().padStart(2, '0');
+    const primerDia = `${this.anioSeleccionado}-${mesStr}-01`;
+    const ultimoDia = `${this.anioSeleccionado}-${mesStr}-31`;
 
+    // 1. Pedimos los datos al servidor (Supabase)
+    const { data: registros, error } = await this.supabaseService.supabase
+      .from('cuentas_diarias')
+      .select('*')
+      .gte('fecha', primerDia)
+      .lte('fecha', ultimoDia);
+
+    if (error) {
+      console.error("Error al traer datos:", error);
+      return;
+    }
+
+    // 2. Reiniciamos totales
     this.totalInversionMensual = 0;
     this.totalMermaMensual = 0;
     this.totalGananciaMensual = 0;
 
+    // 3. Construcción del calendario
     const primerDiaMes = new Date(this.anioSeleccionado, this.mesSeleccionado, 1).getDay();
     const totalDiasMes = new Date(this.anioSeleccionado, this.mesSeleccionado + 1, 0).getDate();
-
-    // Lunes a Domingo (0=Lunes, 6=Domingo)
     let indiceInicioSemana = primerDiaMes === 0 ? 6 : primerDiaMes - 1;
-
     let diasContador = 1;
     const nuevasSemanas: any[][] = [];
 
     for (let i = 0; i < 6; i++) {
       const renglonSemana: any[] = [];
-      
       for (let j = 0; j < 7; j++) {
         if ((i === 0 && j < indiceInicioSemana) || diasContador > totalDiasMes) {
           renglonSemana.push({ numeroDia: null, datosFinancieros: null, fechaCompleta: null });
         } else {
-          const diaFormateado = diasContador < 10 ? `0${diasContador}` : `${diasContador}`;
-          const mesFormateado = (this.mesSeleccionado + 1) < 10 ? `0${this.mesSeleccionado + 1}` : `${this.mesSeleccionado + 1}`;
-          const stringFechaBuscada = `${this.anioSeleccionado}-${mesFormateado}-${diaFormateado}`;
-
-          const cuentaEncontrada = registrosDias.find(registro => registro.fecha === stringFechaBuscada);
+          const diaStr = diasContador.toString().padStart(2, '0');
+          const fechaBuscada = `${this.anioSeleccionado}-${mesStr}-${diaStr}`;
+          const cuentaEncontrada = registros?.find(r => r.fecha === fechaBuscada);
 
           if (cuentaEncontrada) {
-            this.totalInversionMensual += Number(cuentaEncontrada.inversionTotal || 0);
+            this.totalInversionMensual += Number(cuentaEncontrada.inversion_total || 0);
             this.totalMermaMensual += Number(cuentaEncontrada.merma || 0);
             this.totalGananciaMensual += Number(cuentaEncontrada.libre || 0);
           }
 
           renglonSemana.push({
             numeroDia: diasContador,
-            fechaCompleta: stringFechaBuscada,
-            datosFinancieros: cuentaEncontrada ? cuentaEncontrada : null
+            fechaCompleta: fechaBuscada,
+            datosFinancieros: cuentaEncontrada || null
           });
-          
           diasContador++;
         }
       }
       nuevasSemanas.push(renglonSemana);
-      
-      if (diasContador > totalDiasMes) {
-        break;
-      }
+      if (diasContador > totalDiasMes) break;
     }
-
     this.matrizCalendario = nuevasSemanas;
   }
 
-  // NUEVA FUNCIÓN: Permite borrar un día específico si te equivocaste o estás haciendo pruebas
-  eliminarRegistroDia(fechaParaBorrar: string, numeroDia: number): void {
-    const confirmacion = confirm(`¿Estás seguro de que quieres borrar el registro financiero del día ${numeroDia}? Esto no se puede deshacer.`);
-    
+  async eliminarRegistroDia(fechaParaBorrar: string, numeroDia: number): Promise<void> {
+    const confirmacion = confirm(`¿Borrar registro del día ${numeroDia}?`);
     if (!confirmacion) return;
 
-    const datosLocales = localStorage.getItem('historialPozol');
-    if (datosLocales) {
-      let registrosDias: any[] = JSON.parse(datosLocales);
-      
-      // Filtramos la lista dejando fuera el día que queremos eliminar
-      registrosDias = registrosDias.filter(registro => registro.fecha !== fechaParaBorrar);
-      
-      // Guardamos la nueva lista limpia en el LocalStorage
-      localStorage.setItem('historialPozol', JSON.stringify(registrosDias));
-      
-      // Volvemos a pintar el calendario para que desaparezcan los datos y se recalculen los totales del mes
-      this.cargarYConstruirCalendario();
+    // Eliminamos de Supabase
+    const { error } = await this.supabaseService.supabase
+      .from('cuentas_diarias')
+      .delete()
+      .eq('fecha', fechaParaBorrar);
+
+    if (error) {
+      alert("Error al borrar: " + error.message);
+    } else {
+      this.cargarYConstruirCalendario(); // Refrescamos vista
     }
   }
 

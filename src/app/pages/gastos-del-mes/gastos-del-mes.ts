@@ -1,38 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface GastoMes {
-  id: string;
-  fecha: string;
-  concepto: string;
-  monto: number;
-  categoria: string;
-}
+import { SupabaseService } from '../../services/supabase';
 
 @Component({
   selector: 'app-gastos-mensuales',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './gastos-del-mes.html',
-  styleUrl: './gastos-del-mes.css'})
+  styleUrl: './gastos-del-mes.css'
+})
 export class GastosDelMes implements OnInit {
-  
-  // Lista en memoria de los gastos
-  listaGastos: GastoMes[] = [];
-  
-  // Variables vinculadas al formulario de registro
+  listaGastos: any[] = [];
   nuevoConcepto: string = '';
-  nuevoMonto!: number;
+  nuevoMonto: number = 0;
   nuevaCategoria: string = 'Insumos Globales';
   fechaGasto: string = '';
-
-  // Filtro de visualización por mes y año
+  
   mesFiltro!: number;
   anioFiltro!: number;
 
   categorias = ['Insumos Globales', 'Servicios (Luz/Agua/Gas)', 'Renta', 'Mantenimiento', 'Otros Gastos'];
   
+  // ESTO ES LO QUE TE FALTABA
   meses = [
     { valor: 0, nombre: 'Enero' }, { valor: 1, nombre: 'Febrero' }, { valor: 2, nombre: 'Marzo' },
     { valor: 3, nombre: 'Abril' }, { valor: 4, nombre: 'Mayo' }, { valor: 5, nombre: 'Junio' },
@@ -42,72 +32,52 @@ export class GastosDelMes implements OnInit {
 
   totalGastadoMes = 0;
 
+  constructor(private supabaseService: SupabaseService) {}
+
   ngOnInit(): void {
     const hoy = new Date();
     this.mesFiltro = hoy.getMonth();
     this.anioFiltro = hoy.getFullYear();
-    
-    // Inicializar la fecha del formulario con el día de hoy en formato local YYYY-MM-DD
-    const dia = hoy.getDate() < 10 ? `0${hoy.getDate()}` : hoy.getDate();
-    const mes = (hoy.getMonth() + 1) < 10 ? `0${hoy.getMonth() + 1}` : hoy.getMonth() + 1;
-    this.fechaGasto = `${hoy.getFullYear()}-${mes}-${dia}`;
-
+    this.fechaGasto = hoy.toISOString().split('T')[0];
     this.cargarGastos();
   }
 
-  cargarGastos(): void {
-    const datosLocales = localStorage.getItem('gastosMensualesPozol');
-    const todosLosGastos: GastoMes[] = datosLocales ? JSON.parse(datosLocales) : [];
-    
-    // Filtrar la lista para mostrar solo los que correspondan al mes y año seleccionados
-    this.listaGastos = todosLosGastos.filter(gasto => {
-      const partes = gasto.fecha.split('-'); // [YYYY, MM, DD]
-      const anioGasto = parseInt(partes[0], 10);
-      const mesGasto = parseInt(partes[1], 10) - 1;
-      return anioGasto === this.anioFiltro && mesGasto === this.mesFiltro;
-    });
-
-    // Calcular la sumatoria de esta lista filtrada
-    this.totalGastadoMes = this.listaGastos.reduce((acc, curr) => acc + Number(curr.monto || 0), 0);
+  async cargarGastos(): Promise<void> {
+    const { data, error } = await this.supabaseService.obtenerGastosPorMes(this.mesFiltro, this.anioFiltro);
+    if (error) {
+      console.error("Error al traer gastos:", error);
+      return;
+    }
+    this.listaGastos = data || [];
+    this.totalGastadoMes = this.listaGastos.reduce((acc, curr) => acc + Number(curr.costo || 0), 0);
   }
 
-  agregarGasto(): void {
-    if (!this.nuevoConcepto.trim() || !this.nuevoMonto || !this.fechaGasto) {
-      alert('Por favor, llena todos los campos para poder registrar el gasto.');
+  async agregarGasto(): Promise<void> {
+    if (!this.nuevoConcepto.trim() || this.nuevoMonto <= 0) {
+      alert('Llena los campos correctamente.');
       return;
     }
 
-    const nuevoGasto: GastoMes = {
-      id: Date.now().toString(), // Genera un ID único basado en milisegundos
+    const nuevoGasto = {
       fecha: this.fechaGasto,
       concepto: this.nuevoConcepto.trim(),
-      monto: Number(this.nuevoMonto),
+      costo: this.nuevoMonto,
       categoria: this.nuevaCategoria
     };
 
-    const datosLocales = localStorage.getItem('gastosMensualesPozol');
-    const todosLosGastos: GastoMes[] = datosLocales ? JSON.parse(datosLocales) : [];
-    
-    todosLosGastos.push(nuevoGasto);
-    localStorage.setItem('gastosMensualesPozol', JSON.stringify(todosLosGastos));
-
-    // Resetear formulario de inserción rápida
-    this.nuevoConcepto = '';
-    this.nuevoMonto = null!;
-    
-    // Recargar la tabla
-    this.cargarGastos();
-  }
-
-  eliminarGasto(idGasto: string): void {
-    if (!confirm('¿Seguro que deseas eliminar este gasto de la lista mensual?')) return;
-
-    const datosLocales = localStorage.getItem('gastosMensualesPozol');
-    if (datosLocales) {
-      let todosLosGastos: GastoMes[] = JSON.parse(datosLocales);
-      todosLosGastos = todosLosGastos.filter(g => g.id !== idGasto);
-      localStorage.setItem('gastosMensualesPozol', JSON.stringify(todosLosGastos));
+    const { error } = await this.supabaseService.registrarGasto(nuevoGasto);
+    if (error) {
+      alert("Error al guardar: " + error.message);
+    } else {
+      this.nuevoConcepto = '';
+      this.nuevoMonto = 0;
       this.cargarGastos();
     }
+  }
+
+  async eliminarGasto(id: string): Promise<void> {
+    if (!confirm('¿Seguro que deseas eliminar este gasto?')) return;
+    const { error } = await this.supabaseService.eliminarGasto(id);
+    if (!error) this.cargarGastos();
   }
 }

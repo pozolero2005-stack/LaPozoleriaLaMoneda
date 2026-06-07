@@ -1,5 +1,4 @@
 <main class="container-fluid min-vh-100 py-4 px-md-5">
-
   <header class="text-center mb-4">
     <h1 class="font-weight-bold fs-3 mb-1" style="color: rgb(220, 214, 35);">
       Registro de Gastos del Mes
@@ -8,96 +7,79 @@
   </header>
 
   <div class="row g-4">
-    <!-- FORMULARIO DE REGISTRO (COLUMNA IZQUIERDA) -->
-    <section class="col-12 col-lg-4" aria-label="Formulario de captura">
+    <section class="col-12 col-lg-4">
       <div class="card p-3 h-100 style-card border-secondary">
         <h2 class="h6 text-white text-uppercase font-weight-bold mb-3 border-bottom pb-2 border-secondary" style="color: rgb(220, 214, 35) !important;">
           Nuevo Gasto
         </h2>
-        
         <form (submit)="agregarGasto(); $event.preventDefault()">
           <div class="mb-3">
-            <label for="fechaForm" class="form-label text-white small font-weight-bold">Fecha del Gasto</label>
-            <input id="fechaForm" type="date" [(ngModel)]="fechaGasto" name="fechaG" class="form-control bg-dark text-white border-secondary">
+            <label class="form-label text-white small font-weight-bold">Fecha del Gasto</label>
+            <input type="date" [(ngModel)]="fechaGasto" name="fechaG" class="form-control bg-dark text-white border-secondary">
           </div>
-
           <div class="mb-3">
-            <label for="concepto" class="form-label text-white small font-weight-bold">Concepto / Descripción</label>
-            <input id="concepto" type="text" [(ngModel)]="nuevoConcepto" name="conceptoG" class="form-control bg-dark text-white border-secondary" placeholder="Ej. Cilindro de Gas, Compra de Cucharas...">
+            <label class="form-label text-white small font-weight-bold">Concepto</label>
+            <input type="text" [(ngModel)]="nuevoConcepto" name="conceptoG" class="form-control bg-dark text-white border-secondary" placeholder="Ej. Cilindro de Gas">
           </div>
-
           <div class="mb-3">
-            <label for="categoria" class="form-label text-white small font-weight-bold">Categoría</label>
-            <select id="categoria" [(ngModel)]="nuevaCategoria" name="categoriaG" class="form-select bg-dark text-white border-secondary">
+            <label class="form-label text-white small font-weight-bold">Categoría</label>
+            <select [(ngModel)]="nuevaCategoria" name="categoriaG" class="form-select bg-dark text-white border-secondary">
               <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
             </select>
           </div>
-
           <div class="mb-4">
-            <label for="monto" class="form-label text-white small font-weight-bold">Monto Total ($)</label>
-            <input id="monto" type="number" [(ngModel)]="nuevoMonto" name="montoG" class="form-control bg-dark text-white border-secondary" placeholder="0.00" min="0">
+            <label class="form-label text-white small font-weight-bold">Monto Total ($)</label>
+            <input type="number" [(ngModel)]="nuevoMonto" name="montoG" class="form-control bg-dark text-white border-secondary" placeholder="0.00" min="0">
           </div>
-
-          <button type="submit" class="btn w-100 text-uppercase font-weight-bold text-dark style-btn-save" style="background-color: rgb(220, 214, 35);">
+          <button type="submit" class="btn w-100 text-uppercase font-weight-bold text-dark" style="background-color: rgb(220, 214, 35);">
             Registrar Salida
           </button>
         </form>
       </div>
     </section>
 
-    <!-- TABLA Y FILTROS DE CONSULTA (COLUMNA DERECHA) -->
-    <section class="col-12 col-lg-8" aria-label="Listado mensual de gastos">
+    <section class="col-12 col-lg-8">
       <div class="card p-3 h-100 style-card border-secondary">
-        
-        <!-- Filtros superiores de la tabla -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 border-bottom pb-2 border-secondary">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 border-secondary">
           <h2 class="h6 text-white text-uppercase font-weight-bold m-0">Lista de Egresos</h2>
-          
           <div class="d-flex gap-2">
-            <select [(ngModel)]="mesFiltro" (change)="cargarGastos()" class="form-select bg-dark text-white border-secondary form-select-sm" style="width: 120px;">
+            <select [(ngModel)]="mesFiltro" (change)="cargarGastos()" class="form-select bg-dark text-white border-secondary form-select-sm">
               <option *ngFor="let m of meses" [value]="m.valor">{{ m.nombre }}</option>
             </select>
-            <input type="number" [(ngModel)]="anioFiltro" (change)="cargarGastos()" class="form-control bg-dark text-white border-secondary form-control-sm text-center" style="width: 80px;" min="2020" max="2040">
+            <input type="number" [(ngModel)]="anioFiltro" (change)="cargarGastos()" class="form-control bg-dark text-white border-secondary form-control-sm text-center" style="width: 80px;">
           </div>
         </div>
 
-        <!-- Tabla de gastos -->
-        <div class="table-responsive flex-grow-1">
-          <table class="table table-dark table-hover m-0 align-middle small" style="background: transparent;">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle small">
             <thead>
               <tr class="text-white border-secondary">
-                <th scope="col" style="width: 15%">Fecha</th>
-                <th scope="col" style="width: 45%">Concepto</th>
-                <th scope="col" style="width: 20%">Categoría</th>
-                <th scope="col" class="text-end" style="width: 15%">Monto</th>
-                <th scope="col" class="text-center" style="width: 5%"></th>
+                <th>Fecha</th>
+                <th>Concepto</th>
+                <th>Categoría</th>
+                <th class="text-end">Monto</th>
+                <th class="text-center">Acción</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let gasto of listaGastos" class="border-secondary">
                 <td class="text-white-50">{{ gasto.fecha | date:'dd/MM' }}</td>
                 <td class="text-white font-weight-bold">{{ gasto.concepto }}</td>
-                <td><span class="badge rounded-pill bg-secondary text-light font-weight-normal" style="font-size: 0.65rem;">{{ gasto.categoria }}</span></td>
-                <td class="text-end text-danger font-weight-bold">${{ gasto.monto.toFixed(2) }}</td>
+                <td><span class="badge bg-secondary">{{ gasto.categoria }}</span></td>
+                <td class="text-end text-danger font-weight-bold">${{ gasto.costo.toFixed(2) }}</td>
                 <td class="text-center">
-                  <button type="button" class="btn-delete" (click)="eliminarGasto(gasto.id)" title="Eliminar este gasto">✕</button>
+                  <button type="button" class="btn-delete" (click)="eliminarGasto(gasto.id)">✕</button>
                 </td>
-              </tr>
-              <tr *ngIf="listaGastos.length === 0">
-                <td colspan="5" class="text-center text-white py-4 opacity-50">No hay gastos registrados en este periodo mensual.</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Tarjeta acumulada interna del mes -->
-        <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mt-3 shadow-sm" style="background-color: rgba(255, 77, 77, 0.05); border: 1px solid rgba(255, 77, 77, 0.15);">
-          <span class="text-white text-uppercase font-weight-bold small m-0" style="letter-spacing: 0.5px;">Total Egresos del Mes:</span>
+        <div class="d-flex justify-content-between align-items-center p-3 mt-3" style="background-color: rgba(255, 77, 77, 0.05); border: 1px solid rgba(255, 77, 77, 0.15);">
+          <span class="text-white font-weight-bold">Total Egresos:</span>
           <strong class="text-danger fs-4">${{ totalGastadoMes.toFixed(2) }}</strong>
         </div>
-
       </div>
     </section>
   </div>
-
 </main>
