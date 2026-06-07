@@ -5,12 +5,12 @@
 
   <section class="row g-2 justify-content-center mb-4">
     <div class="col-6 col-md-3">
-      <select [(ngModel)]="mesSeleccionado" (change)="alCambiarFiltro()" class="form-select bg-dark text-white border-secondary">
-        <option *ngFor="let m of meses" [value]="m.valor">{{ m.nombre }}</option>
+      <select [(ngModel)]="mesSeleccionado" (change)="alCambiarFiltro()" class="form-select bg-dark text-white border-secondary small-select">
+        <option *ngFor="let m of meses" [ngValue]="m.valor">{{ m.nombre }}</option>
       </select>
     </div>
     <div class="col-6 col-md-2">
-      <input type="number" [(ngModel)]="anioSeleccionado" (change)="alCambiarFiltro()" class="form-control bg-dark text-white border-secondary text-center">
+      <input type="number" [(ngModel)]="anioSeleccionado" (input)="alCambiarFiltro()" class="form-control bg-dark text-white border-secondary text-center small-select" placeholder="Año">
     </div>
   </section>
 
@@ -21,16 +21,15 @@
 
     <div *ngFor="let semana of matrizCalendario" class="row g-1 mb-1">
       <div *ngFor="let dia of semana" class="col calendar-day-col">
-        <div class="card h-100 bg-dark border-secondary p-2">
+        <div class="day-card h-100 p-2" [ngClass]="{'has-data': dia.datosFinancieros, 'empty-day': !dia.numeroDia}">
           <div class="d-flex justify-content-between">
-            <span class="text-white">{{ dia.numeroDia }}</span>
-            <button *ngIf="dia.datosFinancieros" class="btn-close btn-close-white" (click)="eliminarRegistroDia(dia.fechaCompleta, dia.numeroDia)"></button>
+            <span class="day-number">{{ dia.numeroDia }}</span>
+            <button *ngIf="dia.datosFinancieros" class="btn-clear-day" (click)="eliminarRegistroDia(dia.fechaCompleta, dia.numeroDia)">X</button>
           </div>
-          
-          <div *ngIf="dia.datosFinancieros" class="small mt-1">
-            <div class="text-warning">I: ${{ dia.datosFinancieros.inversionTotal }}</div>
-            <div class="text-danger">M: ${{ dia.datosFinancieros.merma }}</div>
-            <div class="text-success fw-bold">L: ${{ dia.datosFinancieros.libre }}</div>
+          <div *ngIf="dia.datosFinancieros" class="mt-1">
+            <div class="item-money text-warning"><span class="prefix">I:</span>${{ dia.datosFinancieros.inversionTotal }}</div>
+            <div class="item-money text-danger"><span class="prefix">M:</span>${{ dia.datosFinancieros.merma }}</div>
+            <div class="item-money text-success fw-bold"><span class="prefix">L:</span>${{ dia.datosFinancieros.libre }}</div>
           </div>
         </div>
       </div>
@@ -38,8 +37,8 @@
   </section>
 
   <footer class="row mt-4 p-3 border-top border-secondary text-center">
-    <div class="col-4"><span class="text-white">Inv:</span><strong class="text-warning d-block">${{ totalInversionMensual.toFixed(2) }}</strong></div>
-    <div class="col-4"><span class="text-white">Merma:</span><strong class="text-danger d-block">${{ totalMermaMensual.toFixed(2) }}</strong></div>
-    <div class="col-4"><span class="text-white">Libre:</span><strong class="text-success d-block">${{ totalGananciaMensual.toFixed(2) }}</strong></div>
+    <div class="col-4 text-white">Inv: <strong class="text-warning d-block">${{ totalInversionMensual.toFixed(2) }}</strong></div>
+    <div class="col-4 text-white">Merma: <strong class="text-danger d-block">${{ totalMermaMensual.toFixed(2) }}</strong></div>
+    <div class="col-4 text-white">Libre: <strong class="text-success d-block">${{ totalGananciaMensual.toFixed(2) }}</strong></div>
   </footer>
 </main>

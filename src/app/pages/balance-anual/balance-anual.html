@@ -12,7 +12,7 @@
   <section class="row justify-content-center mb-4" aria-label="Filtro de año">
     <div class="col-6 col-sm-3 col-md-2">
       <label for="inputAnio" class="visually-hidden">Seleccionar Año</label>
-      <input id="inputAnio" type="number" [(ngModel)]="anioSeleccionado" (change)="alCambiarAnio()" class="form-control bg-dark text-white border-secondary text-center font-weight-bold" min="2020" max="2040" style="border-radius: 6px;">
+      <input id="inputAnio" type="number" [(ngModel)]="anioSeleccionado" (input)="alCambiarAnio()" class="form-control bg-dark text-white border-secondary text-center font-weight-bold" min="2020" max="2040" style="border-radius: 6px;">
     </div>
   </section>
 

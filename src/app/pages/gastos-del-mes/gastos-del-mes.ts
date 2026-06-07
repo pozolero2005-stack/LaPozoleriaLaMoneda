@@ -16,13 +16,18 @@ export class GastosDelMes implements OnInit {
   nuevoMonto: number = 0;
   nuevaCategoria: string = 'Insumos Globales';
   fechaGasto: string = '';
+  idDelaCuentaActual: string = '14919aba-51d8-49ee-b72b-c9b6c9f0c494';
   
   mesFiltro!: number;
   anioFiltro!: number;
+  
+  // Variables para la comparativa financiera
+  totalGastadoMes = 0;
+  totalGananciaNegocio = 0;
+  balanceFinal = 0;
 
   categorias = ['Insumos Globales', 'Servicios (Luz/Agua/Gas)', 'Renta', 'Mantenimiento', 'Otros Gastos'];
   
-  // ESTO ES LO QUE TE FALTABA
   meses = [
     { valor: 0, nombre: 'Enero' }, { valor: 1, nombre: 'Febrero' }, { valor: 2, nombre: 'Marzo' },
     { valor: 3, nombre: 'Abril' }, { valor: 4, nombre: 'Mayo' }, { valor: 5, nombre: 'Junio' },
@@ -30,26 +35,31 @@ export class GastosDelMes implements OnInit {
     { valor: 9, nombre: 'Octubre' }, { valor: 10, nombre: 'Noviembre' }, { valor: 11, nombre: 'Diciembre' }
   ];
 
-  totalGastadoMes = 0;
-
   constructor(private supabaseService: SupabaseService) {}
 
-  ngOnInit(): void {
-    const hoy = new Date();
-    this.mesFiltro = hoy.getMonth();
-    this.anioFiltro = hoy.getFullYear();
-    this.fechaGasto = hoy.toISOString().split('T')[0];
-    this.cargarGastos();
-  }
+ ngOnInit(): void {
+  const hoy = new Date();
+  // Esta línea calcula la fecha exacta en tu zona horaria local
+  const fechaLocal = new Date(hoy.getTime() - (hoy.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+  
+  this.mesFiltro = hoy.getMonth();
+  this.anioFiltro = hoy.getFullYear();
+  this.fechaGasto = fechaLocal; // Ahora siempre será la fecha correcta
+  this.cargarGastos();
+}
 
   async cargarGastos(): Promise<void> {
-    const { data, error } = await this.supabaseService.obtenerGastosPorMes(this.mesFiltro, this.anioFiltro);
-    if (error) {
-      console.error("Error al traer gastos:", error);
-      return;
-    }
-    this.listaGastos = data || [];
+    // Usamos nuestra nueva función unificada
+    const { cuentas, gastos } = await this.supabaseService.obtenerDatosComparativos(this.mesFiltro, this.anioFiltro);
+    
+    this.listaGastos = gastos;
     this.totalGastadoMes = this.listaGastos.reduce((acc, curr) => acc + Number(curr.costo || 0), 0);
+    
+    // Sumamos la ganancia "libre" del negocio
+    this.totalGananciaNegocio = cuentas.reduce((acc, curr) => acc + Number(curr.libre || 0), 0);
+    
+    // Balance Real
+    this.balanceFinal = this.totalGananciaNegocio - this.totalGastadoMes;
   }
 
   async agregarGasto(): Promise<void> {
@@ -62,7 +72,8 @@ export class GastosDelMes implements OnInit {
       fecha: this.fechaGasto,
       concepto: this.nuevoConcepto.trim(),
       costo: this.nuevoMonto,
-      categoria: this.nuevaCategoria
+      categoria: this.nuevaCategoria,
+      cuenta_id: this.idDelaCuentaActual
     };
 
     const { error } = await this.supabaseService.registrarGasto(nuevoGasto);
@@ -71,7 +82,7 @@ export class GastosDelMes implements OnInit {
     } else {
       this.nuevoConcepto = '';
       this.nuevoMonto = 0;
-      this.cargarGastos();
+      this.cargarGastos(); // Recarga y actualiza el balance automáticamente
     }
   }
 

@@ -36,38 +36,39 @@ export class HistorialMensual implements OnInit {
   }
 
   async cargarYConstruirCalendario(): Promise<void> {
-    const mesStr = (this.mesSeleccionado + 1).toString().padStart(2, '0');
-    
-    // Consulta a Supabase
-    const { data: registros, error } = await this.supabaseService.supabase
-      .from('cuentas_diarias')
-      .select('*')
-      .gte('fecha', `${this.anioSeleccionado}-${mesStr}-01`)
-      .lte('fecha', `${this.anioSeleccionado}-${mesStr}-31`);
+    const mesNum = Number(this.mesSeleccionado);
+    const anioNum = Number(this.anioSeleccionado);
 
-    if (error) { console.error("Error Supabase:", error); return; }
+    if (isNaN(mesNum) || isNaN(anioNum) || mesNum < 0 || mesNum > 11) return;
 
+    this.matrizCalendario = [];
     this.totalInversionMensual = 0;
     this.totalMermaMensual = 0;
     this.totalGananciaMensual = 0;
 
-    const primerDiaMes = new Date(this.anioSeleccionado, this.mesSeleccionado, 1).getDay();
-    const totalDiasMes = new Date(this.anioSeleccionado, this.mesSeleccionado + 1, 0).getDate();
-    let indiceInicioSemana = primerDiaMes === 0 ? 6 : primerDiaMes - 1;
+    const ultimoDia = new Date(anioNum, mesNum + 1, 0).getDate();
+    const mesStr = (mesNum + 1).toString().padStart(2, '0');
+    
+    const { data: registros, error } = await this.supabaseService.supabase
+      .from('cuentas_diarias')
+      .select('*')
+      .gte('fecha', `${anioNum}-${mesStr}-01`)
+      .lte('fecha', `${anioNum}-${mesStr}-${ultimoDia}`);
+
+    if (error) { console.error("Error al cargar:", error); return; }
+
+    const primerDiaSemana = new Date(anioNum, mesNum, 1).getDay();
+    let indiceInicioSemana = (primerDiaSemana === 0 ? 6 : primerDiaSemana - 1);
     let diasContador = 1;
-    const nuevasSemanas: any[][] = [];
 
     for (let i = 0; i < 6; i++) {
-      const renglonSemana: any[] = [];
+      const semana = [];
       for (let j = 0; j < 7; j++) {
-        if ((i === 0 && j < indiceInicioSemana) || diasContador > totalDiasMes) {
-          renglonSemana.push({ numeroDia: null });
+        if ((i === 0 && j < indiceInicioSemana) || diasContador > ultimoDia) {
+          semana.push({ numeroDia: null, datosFinancieros: null });
         } else {
-          // Aseguramos formato YYYY-MM-DD
-          const fechaBuscada = `${this.anioSeleccionado}-${mesStr}-${diasContador.toString().padStart(2, '0')}`;
-          
-          // Buscamos ignorando la hora del timestamp de Supabase
-          const registro = registros?.find(r => r.fecha.startsWith(fechaBuscada));
+          const fechaStr = `${anioNum}-${mesStr}-${diasContador.toString().padStart(2, '0')}`;
+          const registro = registros?.find(r => r.fecha === fechaStr);
 
           if (registro) {
             this.totalInversionMensual += Number(registro.inversion_total || 0);
@@ -75,11 +76,10 @@ export class HistorialMensual implements OnInit {
             this.totalGananciaMensual += Number(registro.libre || 0);
           }
 
-          renglonSemana.push({
+          semana.push({
             numeroDia: diasContador,
-            fechaCompleta: fechaBuscada,
+            fechaCompleta: fechaStr,
             datosFinancieros: registro ? {
-              // AQUÍ ESTÁ LA CLAVE: Mapear nombres de BD a nombres de HTML
               inversionTotal: registro.inversion_total,
               merma: registro.merma,
               libre: registro.libre
@@ -88,17 +88,18 @@ export class HistorialMensual implements OnInit {
           diasContador++;
         }
       }
-      nuevasSemanas.push(renglonSemana);
-      if (diasContador > totalDiasMes) break;
+      this.matrizCalendario.push(semana);
+      if (diasContador > ultimoDia) break;
     }
-    this.matrizCalendario = nuevasSemanas;
   }
 
   async eliminarRegistroDia(fecha: string, dia: number): Promise<void> {
-    if (!confirm(`¿Borrar registro del día ${dia}?`)) return;
+    if (!confirm(`¿Eliminar registro del día ${dia}?`)) return;
     await this.supabaseService.supabase.from('cuentas_diarias').delete().eq('fecha', fecha);
     this.cargarYConstruirCalendario();
   }
 
-  alCambiarFiltro(): void { this.cargarYConstruirCalendario(); }
+  alCambiarFiltro(): void { 
+    this.cargarYConstruirCalendario(); 
+  }
 }
