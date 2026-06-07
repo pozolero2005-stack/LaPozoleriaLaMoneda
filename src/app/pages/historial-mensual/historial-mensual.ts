@@ -35,24 +35,17 @@ export class HistorialMensual implements OnInit {
     this.cargarYConstruirCalendario();
   }
 
-  // Función para extraer solo YYYY-MM-DD
-  private normalizarFecha(fecha: string): string {
-    return fecha.split('T')[0];
-  }
-
   async cargarYConstruirCalendario(): Promise<void> {
     const mesStr = (this.mesSeleccionado + 1).toString().padStart(2, '0');
     
+    // Consulta a Supabase
     const { data: registros, error } = await this.supabaseService.supabase
       .from('cuentas_diarias')
       .select('*')
       .gte('fecha', `${this.anioSeleccionado}-${mesStr}-01`)
       .lte('fecha', `${this.anioSeleccionado}-${mesStr}-31`);
 
-    if (error) { 
-      console.error("Error al conectar con Supabase:", error); 
-      return; 
-    }
+    if (error) { console.error("Error Supabase:", error); return; }
 
     this.totalInversionMensual = 0;
     this.totalMermaMensual = 0;
@@ -62,7 +55,7 @@ export class HistorialMensual implements OnInit {
     const totalDiasMes = new Date(this.anioSeleccionado, this.mesSeleccionado + 1, 0).getDate();
     let indiceInicioSemana = primerDiaMes === 0 ? 6 : primerDiaMes - 1;
     let diasContador = 1;
-    this.matrizCalendario = [];
+    const nuevasSemanas: any[][] = [];
 
     for (let i = 0; i < 6; i++) {
       const renglonSemana: any[] = [];
@@ -70,10 +63,11 @@ export class HistorialMensual implements OnInit {
         if ((i === 0 && j < indiceInicioSemana) || diasContador > totalDiasMes) {
           renglonSemana.push({ numeroDia: null });
         } else {
+          // Aseguramos formato YYYY-MM-DD
           const fechaBuscada = `${this.anioSeleccionado}-${mesStr}-${diasContador.toString().padStart(2, '0')}`;
           
-          // Comparamos usando la fecha normalizada para evitar errores de zona horaria
-          const registro = registros?.find(r => this.normalizarFecha(r.fecha) === fechaBuscada);
+          // Buscamos ignorando la hora del timestamp de Supabase
+          const registro = registros?.find(r => r.fecha.startsWith(fechaBuscada));
 
           if (registro) {
             this.totalInversionMensual += Number(registro.inversion_total || 0);
@@ -85,6 +79,7 @@ export class HistorialMensual implements OnInit {
             numeroDia: diasContador,
             fechaCompleta: fechaBuscada,
             datosFinancieros: registro ? {
+              // AQUÍ ESTÁ LA CLAVE: Mapear nombres de BD a nombres de HTML
               inversionTotal: registro.inversion_total,
               merma: registro.merma,
               libre: registro.libre
@@ -93,9 +88,10 @@ export class HistorialMensual implements OnInit {
           diasContador++;
         }
       }
-      this.matrizCalendario.push(renglonSemana);
+      nuevasSemanas.push(renglonSemana);
       if (diasContador > totalDiasMes) break;
     }
+    this.matrizCalendario = nuevasSemanas;
   }
 
   async eliminarRegistroDia(fecha: string, dia: number): Promise<void> {
