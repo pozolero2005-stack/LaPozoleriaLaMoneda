@@ -16,7 +16,7 @@ export class GastosDelMes implements OnInit {
   nuevoMonto: number = 0;
   nuevaCategoria: string = 'Insumos Globales';
   fechaGasto: string = '';
-  idDelaCuentaActual: string = '14919aba-51d8-49ee-b72b-c9b6c9f0c494';
+  idDelaCuentaActual: string = '96b4a104-7414-4cb4-8405-93200e943ce3';
   
   mesFiltro!: number;
   anioFiltro!: number;
