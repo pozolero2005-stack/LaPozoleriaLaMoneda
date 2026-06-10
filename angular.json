@@ -15,24 +15,27 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular/build:application",
+          "builder": "@angular/build:browser",
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "allowedCommonJsDependencies": [
+              "sweetalert2"
+            ],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-           "styles": [
-        "node_modules/bootstrap/dist/css/bootstrap.min.css",
-        "node_modules/bootstrap-icons/font/bootstrap-icons.css",
-        "src/styles.css"
-      ],
-      "scripts": [
-        "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
-      ]
+            "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/bootstrap-icons/font/bootstrap-icons.css",
+              "src/styles.css"
+            ],
+            "scripts": [
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ]
           },
           "configurations": {
             "production": {
