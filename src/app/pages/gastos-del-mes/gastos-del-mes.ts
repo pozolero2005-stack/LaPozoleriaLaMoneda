@@ -2,6 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
+import Swal from 'sweetalert2';
+
+const miSwal = Swal.mixin({
+  background: '#1a1a1a',
+  color: '#ffffff',
+  confirmButtonColor: 'rgb(220, 214, 35)',
+  cancelButtonColor: '#555555',
+  customClass: { popup: 'swal-borde-amarillo' },
+  didOpen: () => {
+    const popup = Swal.getPopup();
+    if (popup) popup.style.border = '2px solid rgb(220, 214, 35)';
+  }
+});
 
 @Component({
   selector: 'app-gastos-mensuales',
@@ -21,7 +34,6 @@ export class GastosDelMes implements OnInit {
   mesFiltro!: number;
   anioFiltro!: number;
   
-  // Variables para la comparativa financiera
   totalGastadoMes = 0;
   totalGananciaNegocio = 0;
   balanceFinal = 0;
@@ -37,34 +49,32 @@ export class GastosDelMes implements OnInit {
 
   constructor(private supabaseService: SupabaseService) {}
 
- ngOnInit(): void {
-  const hoy = new Date();
-  // Esta línea calcula la fecha exacta en tu zona horaria local
-  const fechaLocal = new Date(hoy.getTime() - (hoy.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-  
-  this.mesFiltro = hoy.getMonth();
-  this.anioFiltro = hoy.getFullYear();
-  this.fechaGasto = fechaLocal; // Ahora siempre será la fecha correcta
-  this.cargarGastos();
-}
+  ngOnInit(): void {
+    const hoy = new Date();
+    const fechaLocal = new Date(hoy.getTime() - (hoy.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    
+    this.mesFiltro = hoy.getMonth();
+    this.anioFiltro = hoy.getFullYear();
+    this.fechaGasto = fechaLocal;
+    this.cargarGastos();
+  }
 
   async cargarGastos(): Promise<void> {
-    // Usamos nuestra nueva función unificada
     const { cuentas, gastos } = await this.supabaseService.obtenerDatosComparativos(this.mesFiltro, this.anioFiltro);
     
     this.listaGastos = gastos;
     this.totalGastadoMes = this.listaGastos.reduce((acc, curr) => acc + Number(curr.costo || 0), 0);
-    
-    // Sumamos la ganancia "libre" del negocio
     this.totalGananciaNegocio = cuentas.reduce((acc, curr) => acc + Number(curr.libre || 0), 0);
-    
-    // Balance Real
     this.balanceFinal = this.totalGananciaNegocio - this.totalGastadoMes;
   }
 
   async agregarGasto(): Promise<void> {
     if (!this.nuevoConcepto.trim() || this.nuevoMonto <= 0) {
-      alert('Llena los campos correctamente.');
+      miSwal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, asegúrate de llenar el concepto y el monto correctamente.'
+      });
       return;
     }
 
@@ -78,17 +88,40 @@ export class GastosDelMes implements OnInit {
 
     const { error } = await this.supabaseService.registrarGasto(nuevoGasto);
     if (error) {
-      alert("Error al guardar: " + error.message);
+      miSwal.fire({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: error.message
+      });
     } else {
       this.nuevoConcepto = '';
       this.nuevoMonto = 0;
-      this.cargarGastos(); // Recarga y actualiza el balance automáticamente
+      this.cargarGastos();
+      miSwal.fire({
+        icon: 'success',
+        title: '¡Gasto guardado!',
+        timer: 1000,
+        showConfirmButton: false
+      });
     }
   }
 
   async eliminarGasto(id: string): Promise<void> {
-    if (!confirm('¿Seguro que deseas eliminar este gasto?')) return;
-    const { error } = await this.supabaseService.eliminarGasto(id);
-    if (!error) this.cargarGastos();
+    const result = await miSwal.fire({
+      title: '¿Estás seguro?',
+      text: "Esta acción no se puede deshacer",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      const { error } = await this.supabaseService.eliminarGasto(id);
+      if (!error) {
+        this.cargarGastos();
+        miSwal.fire('Eliminado', 'El gasto ha sido borrado.', 'success');
+      }
+    }
   }
 }

@@ -2,6 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
+import Swal from 'sweetalert2';
+
+const miSwal = Swal.mixin({
+  background: '#1a1a1a',
+  color: '#ffffff',
+  confirmButtonColor: 'rgb(220, 214, 35)',
+  cancelButtonColor: '#555555',
+  customClass: { popup: 'swal-borde-amarillo' },
+  didOpen: () => {
+    const popup = Swal.getPopup();
+    if (popup) popup.style.border = '2px solid rgb(220, 214, 35)';
+  }
+});
 
 @Component({
   selector: 'app-balance-anual',
@@ -25,15 +38,18 @@ export class BalanceAnual implements OnInit {
   }
 
   async calcularBalanceAnual(): Promise<void> {
-    // 1. Llamada al servidor en lugar de localStorage
     const { data: registros, error } = await this.supabaseService.obtenerBalanceAnual(this.anioSeleccionado);
 
     if (error) {
+      miSwal.fire({
+        icon: 'error',
+        title: 'Error de conexión',
+        text: 'No pudimos cargar los datos del año. Intenta de nuevo más tarde.',
+      });
       console.error("Error al obtener balance:", error);
       return;
     }
 
-    // 2. Reiniciar contadores
     this.granTotalInversion = 0;
     this.granTotalMerma = 0;
     this.granTotalGanancia = 0;
@@ -47,7 +63,6 @@ export class BalanceAnual implements OnInit {
       tieneRegistros: false
     }));
 
-    // 3. Procesar datos (Recibimos solo los del año solicitado)
     registros?.forEach(registro => {
       const mesRegistro = new Date(registro.fecha).getMonth();
       

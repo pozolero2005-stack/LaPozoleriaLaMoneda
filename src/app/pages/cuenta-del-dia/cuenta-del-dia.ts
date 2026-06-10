@@ -2,6 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
+import Swal from 'sweetalert2';
+
+const miSwal = Swal.mixin({
+  background: '#1a1a1a',
+  color: '#ffffff',
+  confirmButtonColor: 'rgb(220, 214, 35)',
+  cancelButtonColor: '#555555',
+  customClass: { popup: 'swal-borde-amarillo' },
+  didOpen: () => {
+    const popup = Swal.getPopup();
+    if (popup) popup.style.border = '2px solid rgb(220, 214, 35)';
+  }
+});
 
 @Component({
   selector: 'app-cuenta-del-dia',

@@ -2,6 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
+import Swal from 'sweetalert2';
+
+const miSwal = Swal.mixin({
+  background: '#1a1a1a',
+  color: '#ffffff',
+  confirmButtonColor: 'rgb(220, 214, 35)',
+  cancelButtonColor: '#555555',
+  customClass: { popup: 'swal-borde-amarillo' },
+  didOpen: () => {
+    const popup = Swal.getPopup();
+    if (popup) popup.style.border = '2px solid rgb(220, 214, 35)';
+  }
+});
 
 @Component({
   selector: 'app-historial-mensual',
@@ -35,7 +48,7 @@ export class HistorialMensual implements OnInit {
     this.cargarYConstruirCalendario();
   }
 
- async cargarYConstruirCalendario(): Promise<void> {
+  async cargarYConstruirCalendario(): Promise<void> {
     const mesNum = Number(this.mesSeleccionado);
     const anioNum = Number(this.anioSeleccionado);
 
@@ -46,21 +59,20 @@ export class HistorialMensual implements OnInit {
     this.totalMermaMensual = 0;
     this.totalGananciaMensual = 0;
 
-    // Calculamos el último día del mes asegurando el año y mes correctos
     const ultimoDia = new Date(anioNum, mesNum + 1, 0).getDate();
-    // Padding para asegurar que el mes siempre sea 01-12
     const mesStr = (mesNum + 1).toString().padStart(2, '0');
     
-    // Consulta a Supabase
     const { data: registros, error } = await this.supabaseService.supabase
       .from('cuentas_diarias')
       .select('*')
       .gte('fecha', `${anioNum}-${mesStr}-01`)
       .lte('fecha', `${anioNum}-${mesStr}-${ultimoDia}`);
 
-    if (error) { console.error("Error al cargar:", error); return; }
+    if (error) { 
+      miSwal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los datos.' });
+      return; 
+    }
 
-    // Lógica del calendario
     const primerDiaSemana = new Date(anioNum, mesNum, 1).getDay();
     let indiceInicioSemana = (primerDiaSemana === 0 ? 6 : primerDiaSemana - 1);
     let diasContador = 1;
@@ -68,11 +80,9 @@ export class HistorialMensual implements OnInit {
     for (let i = 0; i < 6; i++) {
       const semana = [];
       for (let j = 0; j < 7; j++) {
-        // Si estamos antes del inicio del mes o ya pasamos el último día, ponemos celda vacía
         if ((i === 0 && j < indiceInicioSemana) || diasContador > ultimoDia) {
           semana.push({ numeroDia: null, datosFinancieros: null });
         } else {
-          // Construimos el string de fecha con seguridad
           const fechaStr = `${anioNum}-${mesStr}-${diasContador.toString().padStart(2, '0')}`;
           const registro = registros?.find(r => r.fecha === fechaStr);
 
@@ -95,15 +105,33 @@ export class HistorialMensual implements OnInit {
         }
       }
       this.matrizCalendario.push(semana);
-      // Salimos del bucle si ya completamos los días del mes
       if (diasContador > ultimoDia) break;
     }
   }
 
   async eliminarRegistroDia(fecha: string, dia: number): Promise<void> {
-    if (!confirm(`¿Eliminar registro del día ${dia}?`)) return;
-    await this.supabaseService.supabase.from('cuentas_diarias').delete().eq('fecha', fecha);
-    this.cargarYConstruirCalendario();
+    const confirmacion = await miSwal.fire({
+      title: '¿Estás seguro?',
+      text: `Se eliminará el registro del día ${dia}. Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (confirmacion.isConfirmed) {
+      const { error } = await this.supabaseService.supabase
+        .from('cuentas_diarias')
+        .delete()
+        .eq('fecha', fecha);
+
+      if (error) {
+        miSwal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el registro.' });
+      } else {
+        miSwal.fire({ icon: 'success', title: 'Eliminado', timer: 1500 });
+        this.cargarYConstruirCalendario();
+      }
+    }
   }
 
   alCambiarFiltro(): void { 
