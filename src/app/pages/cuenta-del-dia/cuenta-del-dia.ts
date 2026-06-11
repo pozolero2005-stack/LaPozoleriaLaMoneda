@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
 import Swal from 'sweetalert2';
 
+
+// Configuración personalizada para un diseño unificado
 const miSwal = Swal.mixin({
   background: '#1a1a1a',
   color: '#ffffff',
@@ -35,23 +37,16 @@ export class CuentaDelDia implements OnInit {
 
     this.formularioFinanciero = new FormGroup({
       fecha: new FormControl('', [Validators.required]),
-      
       vasosCacao: new FormControl(0, [Validators.required, Validators.min(0)]),
       precioCacao: new FormControl(precios.cacao, [Validators.required, Validators.min(0)]),
-      
       vasosCacahuate: new FormControl(0, [Validators.required, Validators.min(0)]),
       precioCacahuate: new FormControl(precios.cacahuate, [Validators.required, Validators.min(0)]),
-      
       vasosBlanco: new FormControl(0, [Validators.required, Validators.min(0)]),
       precioBlanco: new FormControl(precios.blanco, [Validators.required, Validators.min(0)]),
-      
       ventaElectronica: new FormControl(0, [Validators.required, Validators.min(0)]),
-      
       listaGastos: new FormArray([]),
-      
       merma: new FormControl(0, [Validators.required, Validators.min(0)]),
       cajaInicial: new FormControl(0, [Validators.required, Validators.min(0)]),
-      
       inversionTotal: new FormControl({ value: 0, disabled: true }),
       ventaBruta: new FormControl({ value: 0, disabled: true }),
       libre: new FormControl({ value: 0, disabled: true })
@@ -67,15 +62,11 @@ export class CuentaDelDia implements OnInit {
   actualizarPreciosBase(): void {
     const vals = this.formularioFinanciero.value;
     if (vals.precioCacao > 0 && vals.precioCacahuate > 0 && vals.precioBlanco > 0) {
-      const nuevosPrecios = {
-        cacao: vals.precioCacao,
-        cacahuate: vals.precioCacahuate,
-        blanco: vals.precioBlanco
-      };
+      const nuevosPrecios = { cacao: vals.precioCacao, cacahuate: vals.precioCacahuate, blanco: vals.precioBlanco };
       localStorage.setItem('preciosBasePozol', JSON.stringify(nuevosPrecios));
-      alert('¡Excelente! Los precios han sido guardados como predeterminados.');
+      miSwal.fire({ title: '¡Excelente!', text: 'Precios guardados como predeterminados.', icon: 'success' });
     } else {
-      alert('Por favor, introduce precios válidos mayores a 0.');
+      miSwal.fire({ title: 'Error', text: 'Introduce precios mayores a 0.', icon: 'error' });
     }
   }
 
@@ -128,13 +119,12 @@ export class CuentaDelDia implements OnInit {
 
   async guardarDia(): Promise<void> {
     if (this.formularioFinanciero.invalid) {
-      alert('Por favor, revisa que todos los campos requeridos estén llenos.');
+      miSwal.fire({ title: 'Atención', text: 'Revisa que todos los campos estén llenos.', icon: 'warning' });
       return;
     }
 
     const todoElFormulario = this.formularioFinanciero.getRawValue();
 
-    // Filtramos gastos válidos para evitar errores en Supabase
     const listaGastosValidos = (todoElFormulario.listaGastos || [])
       .filter((g: any) => g.concepto && g.concepto.trim() !== '' && g.costo > 0);
 
@@ -156,17 +146,13 @@ export class CuentaDelDia implements OnInit {
 
     try {
       await this.supabaseService.guardarCuentaDiaria(datosDia, listaGastosValidos);
-      
-      alert('¡Jornada guardada con éxito!');
+      miSwal.fire({ title: '¡Éxito!', text: 'Jornada guardada correctamente', icon: 'success' });
 
-      // Reset del formulario
+      // Lógica de reseteo
       const preciosGuardados = localStorage.getItem('preciosBasePozol');
       const precios = preciosGuardados ? JSON.parse(preciosGuardados) : { cacao: 35, cacahuate: 40, blanco: 30 };
-
       const lista = this.formularioFinanciero.get('listaGastos') as FormArray;
-      while (lista.length !== 0) {
-        lista.removeAt(0);
-      }
+      while (lista.length !== 0) lista.removeAt(0);
       
       this.formularioFinanciero.reset({
         fecha: '',
@@ -176,10 +162,9 @@ export class CuentaDelDia implements OnInit {
         ventaElectronica: 0, merma: 0, cajaInicial: 0, inversionTotal: 0, ventaBruta: 0, libre: 0
       });
       this.anadirGasto();
-
     } catch (error: any) {
       console.error('Error al guardar:', error);
-      alert('Hubo un problema al conectar con el castillo: ' + (error.message || error));
+      miSwal.fire({ title: 'Error', text: 'Hubo un problema al conectar con la base de datos.', icon: 'error' });
     }
   }
 }

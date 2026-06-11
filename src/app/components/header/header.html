@@ -1,12 +1,12 @@
 <header class="navbar navbar-light bg-verde-pozoleria">
     <div class="container justify-content-between d-flex align-items-center">
-        <nav class="navbar-nav d-flex flex-row gap-3 ">  
-            <a routerLink="/" class="nav-link">Inicio</a>
-            <a routerLink="/cuentas" class="nav-link">Cuenta del día</a>
-            <a routerLink="/historial" class="nav-link">Historial Mensual</a>
-            <a routerLink="/balance" class="nav-link">Balance Anual</a>
-            <a routerLink="/gastos" class="nav-link">Gastos del Mes</a>
+        <nav class="navbar-nav d-flex flex-row gap-3"> 
+            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Inicio</a>
+            <a routerLink="/cuentas" routerLinkActive="active" class="nav-link">Cuenta del día</a>
+            <a routerLink="/historial" routerLinkActive="active" class="nav-link">Historial Mensual</a>
+            <a routerLink="/balance" routerLinkActive="active" class="nav-link">Balance Anual</a>
+            <a routerLink="/gastos" routerLinkActive="active" class="nav-link">Gastos del Mes</a>
         </nav>
-        <img src="imagenes/Logo.svg" alt="Logo de la pozoleria la moneda"  height="80">
+        <img src="imagenes/Logo.svg" alt="Logo de la pozoleria la moneda" height="80">
     </div>
 </header>

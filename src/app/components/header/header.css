@@ -1,4 +1,21 @@
 .bg-verde-pozoleria {
-  /* ¡Reemplaza este código por tu verde exacto! */
   background-color: #01ac0a !important; 
+}
+
+/* Color de los enlaces normales */
+.nav-link {
+  color: black !important; /* Letras negras */
+  transition: all 0.3s ease; /* Para que el cambio sea suave */
+}
+
+/* Estilo para el enlace activo */
+.nav-link.active {
+  border-bottom: 2px solid black; /* Subrayado negro */
+  font-weight: bold;
+  color: black !important;
+}
+
+/* Opcional: efecto al pasar el ratón (hover) */
+.nav-link:hover {
+  color: #333 !important; /* Un negro un poco más suave al pasar el mouse */
 }
