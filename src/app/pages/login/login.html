@@ -1,0 +1,17 @@
+<div class="login-container d-flex justify-content-center align-items-center min-vh-100">
+  <form [formGroup]="loginForm" (ngSubmit)="entrar()" class="p-4 rounded shadow-lg bg-black text-white" style="width: 400px;">
+    <h3 class="text-center mb-4">INICIA SESIÓN</h3>
+    
+    <div class="mb-3">
+      <label class="form-label">Correo Electrónico</label>
+      <input formControlName="email" type="email" class="form-control custom-input">
+    </div>
+    
+    <div class="mb-3">
+      <label class="form-label">Contraseña</label>
+      <input formControlName="password" type="password" class="form-control custom-input">
+    </div>
+    
+    <button type="submit" class="btn btn-outline-warning w-100 mt-3">Ingresar al Sistema</button>
+  </form>
+</div>

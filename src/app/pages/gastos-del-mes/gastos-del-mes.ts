@@ -1,126 +1,196 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // <-- CORREGIDO: Importamos el despertador
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
 import Swal from 'sweetalert2';
-
-const miSwal = Swal.mixin({
-  background: '#1a1a1a',
-  color: '#ffffff',
-  confirmButtonColor: 'rgb(220, 214, 35)',
-  cancelButtonColor: '#555555',
-  customClass: { popup: 'swal-borde-amarillo' },
-  didOpen: () => {
-    const popup = Swal.getPopup();
-    if (popup) popup.style.border = '2px solid rgb(220, 214, 35)';
-  }
-});
 
 @Component({
   selector: 'app-gastos-mensuales',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  providers: [DatePipe],
   templateUrl: './gastos-del-mes.html',
-  styleUrl: './gastos-del-mes.css'
+  styleUrls: ['./gastos-del-mes.css']
 })
 export class GastosDelMes implements OnInit {
-  listaGastos: any[] = [];
   nuevoConcepto: string = '';
   nuevoMonto: number = 0;
-  nuevaCategoria: string = 'Insumos Globales';
-  fechaGasto: string = '';
-  idDelaCuentaActual: string = '96b4a104-7414-4cb4-8405-93200e943ce3';
-  
-  mesFiltro!: number;
-  anioFiltro!: number;
-  
-  totalGastadoMes = 0;
-  totalGananciaNegocio = 0;
-  balanceFinal = 0;
+  fechaGasto: string = new Date().toISOString().split('T')[0];
 
-  categorias = ['Insumos Globales', 'Servicios (Luz/Agua/Gas)', 'Renta', 'Mantenimiento', 'Otros Gastos'];
-  
-  meses = [
-    { valor: 0, nombre: 'Enero' }, { valor: 1, nombre: 'Febrero' }, { valor: 2, nombre: 'Marzo' },
-    { valor: 3, nombre: 'Abril' }, { valor: 4, nombre: 'Mayo' }, { valor: 5, nombre: 'Junio' },
-    { valor: 6, nombre: 'Julio' }, { valor: 7, nombre: 'Agosto' }, { valor: 8, nombre: 'Septiembre' },
-    { valor: 9, nombre: 'Octubre' }, { valor: 10, nombre: 'Noviembre' }, { valor: 11, nombre: 'Diciembre' }
+  anioSeleccionado!: number;
+  mesSeleccionado!: number;
+
+  listaAnios: number[] = [];
+  listaMeses = [
+    { value: 1, label: 'Enero' }, { value: 2, label: 'Febrero' },
+    { value: 3, label: 'Marzo' }, { value: 4, label: 'Abril' },
+    { value: 5, label: 'Mayo' },  { value: 6, label: 'Junio' },
+    { value: 7, label: 'Julio' }, { value: 8, label: 'Agosto' },
+    { value: 9, label: 'Septiembre' }, { value: 10, label: 'Octubre' },
+    { value: 11, label: 'Noviembre' }, { value: 12, label: 'Diciembre' }
   ];
 
-  constructor(private supabaseService: SupabaseService) {}
+  nombresDias: string[] = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  diasDelMes: any[] = [];
+  listaGastos: any[] = [];
+  diaSeleccionado: any = null; 
+  isSidebarHidden: boolean = false; 
 
-  ngOnInit(): void {
+  totalGastadoMes: number = 0;
+  totalIngresosMes: number = 0;
+  balanceFinal: number = 0;
+
+  // CORREGIDO: Inyectamos 'cdr' en el constructor
+  constructor(private supabaseService: SupabaseService, private cdr: ChangeDetectorRef) {
     const hoy = new Date();
-    const fechaLocal = new Date(hoy.getTime() - (hoy.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-    
-    this.mesFiltro = hoy.getMonth();
-    this.anioFiltro = hoy.getFullYear();
-    this.fechaGasto = fechaLocal;
-    this.cargarGastos();
+    this.anioSeleccionado = hoy.getFullYear();
+    this.mesSeleccionado = hoy.getMonth() + 1;
+
+    const anioActual = hoy.getFullYear();
+    for (let i = 2024; i <= anioActual + 10; i++) {
+      this.listaAnios.push(i);
+    }
   }
 
-  async cargarGastos(): Promise<void> {
-    const { cuentas, gastos } = await this.supabaseService.obtenerDatosComparativos(this.mesFiltro, this.anioFiltro);
+  ngOnInit(): void { 
+    this.cargarDatos(); 
+  }
+
+  toggleSidebar(): void {
+    this.isSidebarHidden = !this.isSidebarHidden;
+  }
+
+  cerrarModal(): void {
+    this.diaSeleccionado = null;
+  }
+
+  private pad(num: number): string {
+    return num < 10 ? `0${num}` : `${num}`;
+  }
+
+  private showSwal(title: string, icon: 'success' | 'error', text?: string) {
+    Swal.fire({
+      title, text, icon,
+      background: '#1a1a1a',
+      color: '#fff',
+      confirmButtonColor: '#ffc107',
+      backdrop: `rgba(0,0,0,0.8)`
+    });
+  }
+
+  async cargarDatos(): Promise<void> {
+    const primerDiaStr = `${this.anioSeleccionado}-${this.pad(this.mesSeleccionado)}-01`;
+    const totalDiasEnMes = new Date(this.anioSeleccionado, this.mesSeleccionado, 0).getDate();
+    const ultimoDiaStr = `${this.anioSeleccionado}-${this.pad(this.mesSeleccionado)}-${totalDiasEnMes}`;
+
+    const { data: cuentas } = await this.supabaseService.supabase
+      .from('cuenta_diaria')
+      .select('venta_neta_real')
+      .gte('fecha', primerDiaStr)
+      .lte('fecha', ultimoDiaStr);
+
+    const { data: gastos } = await this.supabaseService.supabase
+      .from('gastos_mantenimiento')
+      .select('*')
+      .gte('fecha', primerDiaStr)
+      .lte('fecha', ultimoDiaStr)
+      .order('fecha', { ascending: false });
+
+    this.listaGastos = gastos || [];
     
-    this.listaGastos = gastos;
-    this.totalGastadoMes = this.listaGastos.reduce((acc, curr) => acc + Number(curr.costo || 0), 0);
-    this.totalGananciaNegocio = cuentas.reduce((acc, curr) => acc + Number(curr.libre || 0), 0);
-    this.balanceFinal = this.totalGananciaNegocio - this.totalGastadoMes;
+    let ingresos = 0;
+    let egresos = 0;
+
+    cuentas?.forEach(c => ingresos += (Number(c.venta_neta_real) || 0));
+    this.listaGastos.forEach(g => egresos += (Number(g.monto) || 0));
+
+    this.totalIngresosMes = ingresos;
+    this.totalGastadoMes = egresos;
+    this.balanceFinal = ingresos - egresos;
+
+    this.generarCalendario(totalDiasEnMes, this.listaGastos);
+    
+    // CORREGIDO: Forzamos a la pantalla a redibujarse con los datos nuevos
+    this.cdr.detectChanges();
+  }
+
+  generarCalendario(totalDias: number, gastos: any[]): void {
+    this.diasDelMes = [];
+
+    const primerDiaSemana = new Date(this.anioSeleccionado, this.mesSeleccionado - 1, 1).getDay();
+    const espaciosVacios = primerDiaSemana === 0 ? 6 : primerDiaSemana - 1;
+
+    for (let h = 0; h < espaciosVacios; h++) {
+      this.diasDelMes.push({ vacio: true });
+    }
+
+    for (let i = 1; i <= totalDias; i++) {
+      const fechaStr = `${this.anioSeleccionado}-${this.pad(this.mesSeleccionado)}-${this.pad(i)}`;
+      const gastosDia = gastos.filter(g => g.fecha === fechaStr);
+      const totalDia = gastosDia.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
+
+      this.diasDelMes.push({
+        vacio: false,
+        numero: i,
+        fecha: fechaStr,
+        gastos: gastosDia,
+        totalGastado: totalDia
+      });
+    }
+
+    if (this.diaSeleccionado && !this.diaSeleccionado.vacio) {
+      this.diaSeleccionado = this.diasDelMes.find(d => d.fecha === this.diaSeleccionado.fecha) || null;
+    }
+  }
+
+  seleccionarDia(dia: any): void {
+    if (dia.vacio) return;
+    this.diaSeleccionado = dia;
   }
 
   async agregarGasto(): Promise<void> {
-    if (!this.nuevoConcepto.trim() || this.nuevoMonto <= 0) {
-      miSwal.fire({
-        icon: 'warning',
-        title: 'Campos incompletos',
-        text: 'Por favor, asegúrate de llenar el concepto y el monto correctamente.'
-      });
+    if (!this.nuevoConcepto || this.nuevoMonto <= 0) {
+      this.showSwal('Oops!', 'error', 'Ingresa concepto y monto válido');
       return;
     }
 
-    const nuevoGasto = {
-      fecha: this.fechaGasto,
-      concepto: this.nuevoConcepto.trim(),
-      costo: this.nuevoMonto,
-      categoria: this.nuevaCategoria,
-      cuenta_id: this.idDelaCuentaActual
-    };
+    const { error } = await this.supabaseService.supabase.from('gastos_mantenimiento').insert([{ 
+      fecha: this.fechaGasto, 
+      concepto: this.nuevoConcepto, 
+      monto: this.nuevoMonto 
+    }]);
 
-    const { error } = await this.supabaseService.registrarGasto(nuevoGasto);
     if (error) {
-      miSwal.fire({
-        icon: 'error',
-        title: 'Error al guardar',
-        text: error.message
-      });
+      this.showSwal('Error', 'error', error.message);
     } else {
+      this.showSwal('¡Registrado!', 'success', 'Gasto guardado con éxito');
       this.nuevoConcepto = '';
       this.nuevoMonto = 0;
-      this.cargarGastos();
-      miSwal.fire({
-        icon: 'success',
-        title: '¡Gasto guardado!',
-        timer: 1000,
-        showConfirmButton: false
-      });
+      await this.cargarDatos();
     }
   }
 
-  async eliminarGasto(id: string): Promise<void> {
-    const result = await miSwal.fire({
-      title: '¿Estás seguro?',
-      text: "Esta acción no se puede deshacer",
+  async borrarGasto(id: string): Promise<void> {
+    const result = await Swal.fire({
+      title: '¿Eliminar este gasto?',
+      text: "Esta acción no se puede deshacer.",
       icon: 'warning',
+      background: '#1a1a1a',
+      color: '#fff',
       showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, borrar',
       cancelButtonText: 'Cancelar'
     });
 
     if (result.isConfirmed) {
-      const { error } = await this.supabaseService.eliminarGasto(id);
-      if (!error) {
-        this.cargarGastos();
-        miSwal.fire('Eliminado', 'El gasto ha sido borrado.', 'success');
+      const { error } = await this.supabaseService.supabase.from('gastos_mantenimiento').delete().eq('id', id);
+      if (error) {
+        this.showSwal('Error', 'error', 'No se pudo eliminar el gasto');
+      } else {
+        await this.cargarDatos();
+        this.showSwal('Eliminado', 'success', 'El gasto ha sido borrado');
       }
     }
   }

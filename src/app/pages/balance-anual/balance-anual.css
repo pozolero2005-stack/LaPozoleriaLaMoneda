@@ -1,46 +1,107 @@
-/* Tarjetas de los tres grandes totales superiores */
+/* EFECTO CRISTAL OSCURO PARA GRANDES TOTALES */
 .card-total {
-  background-color: rgba(255, 255, 255, 0.01) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  border-radius: 8px !important;
+  background: rgba(20, 20, 25, 0.75) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
-.style-title {
+.total-ganancia-border {
+  border: 1px solid #00ff88 !important;
+}
+
+/* INPUT DEL AÑO ESTILO CONTROLES */
+.bg-dark-input {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.2s ease;
+  height: 42px;
+}
+
+.bg-dark-input:focus {
+  border-color: #00ff88 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.2) !important;
+  outline: none;
+}
+
+/* TARJETAS DE CADA UNO DE LOS 12 MESES */
+.card-mes {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+/* Meses que sí tienen operaciones en el año */
+.card-mes.mes-activo {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-left: 4px solid #00ff88 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.card-mes.mes-activo:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 255, 136, 0.4);
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Meses apagados en gris de fondo */
+.card-mes.mes-vacio {
+  opacity: 0.35;
+  background: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ELEMENTOS PEQUEÑOS DE TEXTOS */
+.small-label {
   font-size: 0.7rem;
   letter-spacing: 0.5px;
 }
 
-/* Tarjetas de cada uno de los 12 meses */
-.row-mes {
-  background-color: rgba(255, 255, 255, 0.015) !important;
-  border: 1px solid rgba(255, 255, 255, 0.04) !important;
-  transition: transform 0.15s ease, background-color 0.15s ease;
+.item-titulo {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  margin-bottom: 3px;
 }
 
-/* Meses que sí tienen operaciones contables registradas */
-.row-mes.mes-activo {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-  border-left: 3px solid rgb(220, 214, 35) !important;
+.item-monto {
+  font-size: 0.85rem;
 }
 
-.row-mes.mes-activo:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  transform: translateY(-2px);
+.border-secondary-ajustado {
+  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Meses apagados que aún no operan */
-.row-mes.mes-vacio {
-  opacity: 0.4;
+.badge-vacio {
+  font-size: 0.65rem;
+  font-style: italic;
 }
 
-/* Textos informativos internos */
-.small-label {
-  font-size: 0.68rem;
-  text-uppercase: true;
-  letter-spacing: 0.3px;
-  margin-bottom: 1px;
+.badge-activo {
+  font-size: 0.65rem;
+  font-weight: bold;
 }
 
-.style-amounts {
-  font-size: 0.9rem;
+/* PALETA DE COLORES DE LUCES NEÓN */
+.text-success { color: #00ff88 !important; }
+.text-info { color: #00bfff !important; }
+.text-warning { color: #ffc107 !important; }
+.text-danger { color: #ff4a4a !important; }
+
+.glow-text {
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
+}
+
+/* QUITAR FLECHAS DEL INPUT NUMÉRICO */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+input[type=number] {
+  -moz-appearance: textfield !important;
 }

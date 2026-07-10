@@ -10,5 +10,6 @@ export const routes: Routes = [
     {path:"cuentas", component:CuentaDelDia},
     {path:"historial", component:HistorialMensual},
     {path:"balance", component: BalanceAnual},
-    {path:"gastos", component: GastosDelMes}
+    {path:"gastos", component: GastosDelMes},
+    { path: 'login', loadComponent: () => import('./pages/login/login').then(m => m.Login) }
 ];

@@ -1,110 +1,90 @@
-/* Contenedor estilo página de libro contable */
-.log-book-container {
-  background-color: rgba(255, 255, 255, 0.015);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
+/* CONFIGURACIÓN GENERAL DEL FORMULARIO */
+.form-cyber {
+  font-family: 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Selector de fecha centrado */
-.date-input {
-  border: none;
-  font-size: 1.75rem;
-  color: #ffffff;
-  outline: none;
-}
-.date-input:focus {
-  box-shadow: none;
+/* EFECTO CRISTAL OSCURO TRANSLÚCIDO */
+.bg-dark-glass {
+  background: rgba(20, 20, 25, 0.75) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-/* Texto de las etiquetas informativas */
-.label-text {
-  color: rgba(222, 219, 219, 0.85);
-  font-weight: 300;
-  margin-bottom: 0;
+/* BORDES AJUSTADOS CON GLOW */
+.border-success {
+  border: 1px solid #00ff88 !important;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.05);
 }
 
-/* Envoltura para encajar los símbolos monetarios */
-.log-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
+.border-warning {
+  border: 1px solid #ffc107 !important;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.05);
 }
 
-.log-input-wrapper .currency-symbol {
-  position: absolute;
-  left: 10px;
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 0.9rem;
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* Inputs de línea baja estilo cuaderno */
-.log-input {
-  background-color: transparent !important;
-  border: none !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+/* DISEÑO DE INPUTS OSCUROS (Elimina las cajas blancas por completo) */
+.bg-dark-input {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
-  border-radius: 0 !important;
-  padding: 6px 10px 6px 25px !important;
-  font-size: 1rem;
-  width: 100%;
+  border-radius: 6px !important;
   transition: all 0.2s ease;
 }
-.log-input:focus {
-  background-color: rgba(255, 255, 255, 0.02) !important;
-  border-bottom-color: rgb(220, 214, 35) !important;
-  box-shadow: none !important;
+
+.bg-dark-input:focus {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: #00ff88 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.2) !important;
+  outline: none;
 }
 
-/* Ajuste específico para que la cantidad de vasos no quede tan pegada a la izquierda */
-input[placeholder="Vasos"] {
-  padding-left: 10px !important;
+/* El prefijo del signo de pesos ($) pegado al input */
+.input-group-text.bg-dark-input {
+  border-right: none !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+.input-group-text + .form-control {
+  border-left: none !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
-/* Estilo para los campos de la tabla de gastos dinámicos */
-.log-input-table {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+/* Input específico de control de Fecha superior */
+.input-fecha {
+  background-color: rgba(0, 255, 136, 0.05) !important;
+  border: 1px solid #00ff88 !important;
+  color: #00ff88 !important;
+  font-weight: 600;
+}
+
+/* PALETA DE TEXTOS CON ALTO CONTRASTE */
+.text-success { color: #00ff88 !important; }
+.text-info { color: #00bfff !important; }
+.text-warning { color: #ffc107 !important; }
+.text-danger { color: #ff4a4a !important; }
+
+.glow-text {
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.6);
+}
+
+/* BOTÓN GUARDAR JORNADA NEÓN */
+.btn-guardar {
+  background-color: #00ff88 !important;
   border: none !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
-  border-radius: 4px !important;
-  padding: 6px 10px !important;
-  font-size: 0.9rem;
-}
-.log-input-table:focus {
-  border-bottom-color: rgb(220, 214, 35) !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  box-shadow: none !important;
-}
-.log-input-wrapper .log-input-table {
-  padding-left: 25px !important;
-}
-
-/* Botón de eliminar renglón de gasto */
-.btn-delete {
-  background: transparent;
-  border: none;
-  color: rgba(255, 77, 77, 0.5);
+  color: #0c0c0e !important;
+  font-weight: bold !important;
+  border-radius: 6px !important;
   font-size: 1rem;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  padding: 5px;
-}
-.btn-delete:hover {
-  color: #ff4d4d;
+  transition: all 0.2s ease;
 }
 
-/* Bloqueo total del output final */
-.readonly-input {
-  pointer-events: none;
-  max-width: 250px;
+.btn-guardar:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6) !important;
+  transform: translateY(-1px);
 }
 
-/* ELIMINA LAS FLECHAS NATIVAS DE TODOS LOS NAVEGADORES */
+/* ELIMINAR FLECHAS MOLESTAS DE LOS INPUTS NÚMERICOS */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none !important;
@@ -112,4 +92,16 @@ input::-webkit-inner-spin-button {
 }
 input[type=number] {
   -moz-appearance: textfield !important;
+}
+
+/* Ajuste fino de barra de scroll para el contenedor de gastos */
+.overflow-auto::-webkit-scrollbar {
+  width: 5px;
+}
+.overflow-auto::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }

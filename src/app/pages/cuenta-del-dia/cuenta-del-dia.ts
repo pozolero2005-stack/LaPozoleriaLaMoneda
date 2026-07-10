@@ -4,20 +4,6 @@ import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
 import Swal from 'sweetalert2';
 
-
-// Configuración personalizada para un diseño unificado
-const miSwal = Swal.mixin({
-  background: '#1a1a1a',
-  color: '#ffffff',
-  confirmButtonColor: 'rgb(220, 214, 35)',
-  cancelButtonColor: '#555555',
-  customClass: { popup: 'swal-borde-amarillo' },
-  didOpen: () => {
-    const popup = Swal.getPopup();
-    if (popup) popup.style.border = '2px solid rgb(220, 214, 35)';
-  }
-});
-
 @Component({
   selector: 'app-cuenta-del-dia',
   standalone: true,
@@ -26,57 +12,45 @@ const miSwal = Swal.mixin({
   styleUrl: './cuenta-del-dia.css'
 })
 export class CuentaDelDia implements OnInit {
-  
   formularioFinanciero!: FormGroup;
 
   constructor(private supabaseService: SupabaseService) {}
 
   ngOnInit(): void {
-    const preciosGuardados = localStorage.getItem('preciosBasePozol');
-    const precios = preciosGuardados ? JSON.parse(preciosGuardados) : { cacao: 35, cacahuate: 40, blanco: 30 };
-
     this.formularioFinanciero = new FormGroup({
-      fecha: new FormControl('', [Validators.required]),
+      fecha: new FormControl(new Date().toISOString().split('T')[0], [Validators.required]),
       vasosCacao: new FormControl(0, [Validators.required, Validators.min(0)]),
-      precioCacao: new FormControl(precios.cacao, [Validators.required, Validators.min(0)]),
+      precioCacao: new FormControl(20, [Validators.required, Validators.min(0)]),
       vasosCacahuate: new FormControl(0, [Validators.required, Validators.min(0)]),
-      precioCacahuate: new FormControl(precios.cacahuate, [Validators.required, Validators.min(0)]),
+      precioCacahuate: new FormControl(20, [Validators.required, Validators.min(0)]),
       vasosBlanco: new FormControl(0, [Validators.required, Validators.min(0)]),
-      precioBlanco: new FormControl(precios.blanco, [Validators.required, Validators.min(0)]),
+      precioBlanco: new FormControl(15, [Validators.required, Validators.min(0)]),
       ventaElectronica: new FormControl(0, [Validators.required, Validators.min(0)]),
-      listaGastos: new FormArray([]),
       merma: new FormControl(0, [Validators.required, Validators.min(0)]),
-      cajaInicial: new FormControl(0, [Validators.required, Validators.min(0)]),
-      inversionTotal: new FormControl({ value: 0, disabled: true }),
-      ventaBruta: new FormControl({ value: 0, disabled: true }),
-      libre: new FormControl({ value: 0, disabled: true })
+      listaGastos: new FormArray([])
     });
-
     this.anadirGasto();
-
-    this.formularioFinanciero.valueChanges.subscribe(() => {
-      this.realizarCalculosDelDia();
-    });
   }
 
-  actualizarPreciosBase(): void {
-    const vals = this.formularioFinanciero.value;
-    if (vals.precioCacao > 0 && vals.precioCacahuate > 0 && vals.precioBlanco > 0) {
-      const nuevosPrecios = { cacao: vals.precioCacao, cacahuate: vals.precioCacahuate, blanco: vals.precioBlanco };
-      localStorage.setItem('preciosBasePozol', JSON.stringify(nuevosPrecios));
-      miSwal.fire({ title: '¡Excelente!', text: 'Precios guardados como predeterminados.', icon: 'success' });
-    } else {
-      miSwal.fire({ title: 'Error', text: 'Introduce precios mayores a 0.', icon: 'error' });
-    }
+  get totalVentaBruta(): number {
+    const v = this.formularioFinanciero.value;
+    return (v.vasosCacao * v.precioCacao) + (v.vasosCacahuate * v.precioCacahuate) + (v.vasosBlanco * v.precioBlanco);
   }
 
-  get listaGastosControls() {
-    return (this.formularioFinanciero.get('listaGastos') as FormArray).controls;
+  get totalGastos(): number {
+    return this.formularioFinanciero.value.listaGastos.reduce((acc: number, g: any) => acc + (g.costo || 0), 0);
+  }
+
+  get dineroFinal(): number {
+    return this.totalVentaBruta - this.totalGastos - this.formularioFinanciero.value.merma;
+  }
+
+  get listaGastosControls() { 
+    return (this.formularioFinanciero.get('listaGastos') as FormArray).controls; 
   }
 
   anadirGasto(): void {
-    const lista = this.formularioFinanciero.get('listaGastos') as FormArray;
-    lista.push(new FormGroup({
+    (this.formularioFinanciero.get('listaGastos') as FormArray).push(new FormGroup({
       concepto: new FormControl('', [Validators.required]),
       costo: new FormControl(0, [Validators.required, Validators.min(0)])
     }));
@@ -84,87 +58,67 @@ export class CuentaDelDia implements OnInit {
 
   eliminarGasto(index: number): void {
     const lista = this.formularioFinanciero.get('listaGastos') as FormArray;
-    if (lista.length > 1) {
-      lista.removeAt(index);
-    } else {
-      lista.at(0).reset({ concepto: '', costo: 0 });
-    }
-  }
-
-  realizarCalculosDelDia(): void {
-    const valores = this.formularioFinanciero.getRawValue();
-    const totalCacao = Number(valores.vasosCacao || 0) * Number(valores.precioCacao || 0);
-    const totalCacahuate = Number(valores.vasosCacahuate || 0) * Number(valores.precioCacahuate || 0);
-    const totalBlanco = Number(valores.vasosBlanco || 0) * Number(valores.precioBlanco || 0);
-
-    const ventaEfectivoTotal = totalCacao + totalCacahuate + totalBlanco;
-    const ventaBrutaTotal = ventaEfectivoTotal + Number(valores.ventaElectronica || 0);
-
-    let sumaGastos = 0;
-    const arrayGastos = valores.listaGastos || [];
-    for (let gasto of arrayGastos) {
-      sumaGastos += Number(gasto.costo || 0);
-    }
-
-    const merma = Number(valores.merma || 0);
-    const cajaInicial = Number(valores.cajaInicial || 0);
-    const resultadoLibre = ventaBrutaTotal - sumaGastos - merma - cajaInicial;
-
-    this.formularioFinanciero.patchValue({
-      inversionTotal: Number(sumaGastos.toFixed(2)),
-      ventaBruta: Number(ventaBrutaTotal.toFixed(2)),
-      libre: Number(resultadoLibre.toFixed(2))
-    }, { emitEvent: false });
+    lista.length > 1 ? lista.removeAt(index) : lista.at(0).reset({ concepto: '', costo: 0 });
   }
 
   async guardarDia(): Promise<void> {
     if (this.formularioFinanciero.invalid) {
-      miSwal.fire({ title: 'Atención', text: 'Revisa que todos los campos estén llenos.', icon: 'warning' });
+      Swal.fire({ 
+        title: 'Atención', 
+        text: 'Revisa los campos.', 
+        icon: 'warning',
+        background: '#1a1a1a',
+        color: '#fff',
+        confirmButtonColor: '#ffc107'
+      });
       return;
     }
 
-    const todoElFormulario = this.formularioFinanciero.getRawValue();
+    const valores = this.formularioFinanciero.value;
+    const { data: { user } } = await this.supabaseService.supabase.auth.getUser();
 
-    const listaGastosValidos = (todoElFormulario.listaGastos || [])
-      .filter((g: any) => g.concepto && g.concepto.trim() !== '' && g.costo > 0);
-
-    const datosDia = {
-      fecha: todoElFormulario.fecha,
-      vasos_cacao: todoElFormulario.vasosCacao,
-      precio_cacao: todoElFormulario.precioCacao,
-      vasos_cacahuate: todoElFormulario.vasosCacahuate,
-      precio_cacahuate: todoElFormulario.precioCacahuate,
-      vasos_blanco: todoElFormulario.vasosBlanco,
-      precio_blanco: todoElFormulario.precioBlanco,
-      venta_electronica: todoElFormulario.ventaElectronica,
-      merma: todoElFormulario.merma,
-      caja_inicial: todoElFormulario.cajaInicial,
-      inversion_total: todoElFormulario.inversionTotal,
-      venta_bruta: todoElFormulario.ventaBruta,
-      libre: todoElFormulario.libre
-    };
-
-    try {
-      await this.supabaseService.guardarCuentaDiaria(datosDia, listaGastosValidos);
-      miSwal.fire({ title: '¡Éxito!', text: 'Jornada guardada correctamente', icon: 'success' });
-
-      // Lógica de reseteo
-      const preciosGuardados = localStorage.getItem('preciosBasePozol');
-      const precios = preciosGuardados ? JSON.parse(preciosGuardados) : { cacao: 35, cacahuate: 40, blanco: 30 };
-      const lista = this.formularioFinanciero.get('listaGastos') as FormArray;
-      while (lista.length !== 0) lista.removeAt(0);
-      
-      this.formularioFinanciero.reset({
-        fecha: '',
-        vasosCacao: 0, precioCacao: precios.cacao,
-        vasosCacahuate: 0, precioCacahuate: precios.cacahuate,
-        vasosBlanco: 0, precioBlanco: precios.blanco,
-        ventaElectronica: 0, merma: 0, cajaInicial: 0, inversionTotal: 0, ventaBruta: 0, libre: 0
+    if (!user) {
+      Swal.fire({ 
+        title: 'Error', 
+        text: 'Debes iniciar sesión.', 
+        icon: 'error',
+        background: '#1a1a1a',
+        color: '#fff',
+        confirmButtonColor: '#dc3545'
       });
-      this.anadirGasto();
-    } catch (error: any) {
-      console.error('Error al guardar:', error);
-      miSwal.fire({ title: 'Error', text: 'Hubo un problema al conectar con la base de datos.', icon: 'error' });
+      return;
+    }
+
+    const { error } = await this.supabaseService.supabase
+      .from('cuenta_diaria')
+      .insert([
+        {
+          fecha: valores.fecha,
+          user_id: user.id,
+          venta_bruta: this.totalVentaBruta,
+          inversion_dia: this.totalGastos,
+          valor_merma: valores.merma
+        }
+      ]);
+
+    if (error) {
+      console.error(error);
+      Swal.fire({ 
+        title: 'Error', 
+        text: 'No se pudo guardar en la base de datos.', 
+        icon: 'error',
+        background: '#1a1a1a',
+        color: '#fff'
+      });
+    } else {
+      Swal.fire({ 
+        title: '¡Éxito!', 
+        text: 'Jornada guardada perfectamente.', 
+        icon: 'success',
+        background: '#1a1a1a',
+        color: '#fff',
+        confirmButtonColor: '#00ff88'
+      });
     }
   }
 }

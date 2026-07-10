@@ -1,77 +1,83 @@
-<main class="container-fluid min-vh-100 py-4 px-md-5">
-
-  <!-- Encabezado de la Sección -->
+<main class="container-fluid min-vh-100 py-4 px-md-5 text-white">
+  
+  <!-- ENCABEZADO -->
   <header class="text-center mb-4">
-    <h1 class="font-weight-bold fs-3 mb-1" style="color: rgb(220, 214, 35);">
-      Balance Financiero Anual
-    </h1>
-    <p class="text-white small text-uppercase" style="letter-spacing: 1px;">La Pozolería • Resumen de Alto Rendimiento</p>
+    <h1 class="fw-bold h3 glow-text text-success">Balance Financiero Anual</h1>
   </header>
 
   <!-- FILTRO DE AÑO -->
-  <section class="row justify-content-center mb-4" aria-label="Filtro de año">
-    <div class="col-6 col-sm-3 col-md-2">
-      <label for="inputAnio" class="visually-hidden">Seleccionar Año</label>
-      <input id="inputAnio" type="number" [(ngModel)]="anioSeleccionado" (input)="alCambiarAnio()" class="form-control bg-dark text-white border-secondary text-center font-weight-bold" min="2020" max="2040" style="border-radius: 6px;">
+  <section class="row justify-content-center mb-4">
+    <div class="col-5 col-sm-3 col-md-2">
+      <input type="number" [(ngModel)]="anioSeleccionado" (input)="alCambiarAnio()" class="form-control bg-dark-input text-white border-secondary text-center" placeholder="Año">
     </div>
   </section>
 
-  <!-- TARJETAS DE RENDIMIENTO GLOBAL ANUAL -->
-  <section class="row g-3 mb-4" aria-label="Totales anuales">
-    <div class="col-12 col-sm-4">
-      <div class="card card-total bg-dark border-secondary p-3 text-center h-100">
-        <span class="text-white text-uppercase small style-title">Inversión Total Anual</span>
-        <strong class="text-warning fs-3 mt-1">${{ granTotalInversion.toFixed(2) }}</strong>
+  <!-- TARJETAS GLOBALES (GRANDES TOTALES) -->
+  <section class="row g-3 mb-4">
+    
+    <div class="col-6 col-sm-3">
+      <div class="card-total p-3 text-center h-100">
+        <span class="text-muted text-uppercase small-label d-block mb-1">Venta Bruta</span>
+        <strong class="text-info h3 m-0 fw-bold">${{ granTotalVentas.toFixed(2) }}</strong>
       </div>
     </div>
-    <div class="col-12 col-sm-4">
-      <div class="card card-total bg-dark border-secondary p-3 text-center h-100">
-        <span class="text-white text-uppercase small style-title">Merma Total Acumulada</span>
-        <strong class="text-danger fs-3 mt-1">${{ granTotalMerma.toFixed(2) }}</strong>
+
+    <div class="col-6 col-sm-3">
+      <div class="card-total p-3 text-center h-100">
+        <span class="text-muted text-uppercase small-label d-block mb-1">Inversión Total</span>
+        <strong class="text-warning h3 m-0 fw-bold">${{ granTotalInversion.toFixed(2) }}</strong>
       </div>
     </div>
-    <div class="col-12 col-sm-4">
-      <div class="card card-total bg-dark border-secondary p-3 text-center h-100" style="border-color: rgba(40, 167, 69, 0.3) !important;">
-        <span class="text-white text-uppercase small style-title">Ganancia Neta Anual</span>
-        <strong class="text-success fs-2 mt-1">${{ granTotalGanancia.toFixed(2) }}</strong>
+
+    <div class="col-6 col-sm-3">
+      <div class="card-total p-3 text-center h-100">
+        <span class="text-muted text-uppercase small-label d-block mb-1">Merma Acumulada</span>
+        <strong class="text-danger h3 m-0 fw-bold">${{ granTotalMerma.toFixed(2) }}</strong>
       </div>
     </div>
+
+    <div class="col-6 col-sm-3">
+      <div class="card-total p-3 text-center h-100 total-ganancia-border">
+        <span class="text-muted text-uppercase small-label d-block mb-1">Ganancia Neta</span>
+        <strong class="text-success h3 m-0 fw-bold glow-text">${{ granTotalGanancia.toFixed(2) }}</strong>
+      </div>
+    </div>
+
   </section>
 
-  <!-- DESGLOSE DETALLADO MES POR MES -->
-  <section class="row g-2" aria-label="Desglose mensual">
-    <div class="col-12">
-      <h2 class="h6 text-uppercase text-white mb-3 font-weight-bold" style="letter-spacing: 0.5px;">Rendimiento Desglosado por Meses</h2>
-    </div>
-
+  <!-- DESGLOSE DE LOS 12 MESES -->
+  <section class="row g-3">
     <div *ngFor="let mes of mesesDelAnio" class="col-12 col-md-6 col-xl-4">
-      <!-- Tarjeta del Mes -->
-      <div class="card row-mes border-0 p-3 rounded-3" [ngClass]="{'mes-vacio': !mes.tieneRegistros, 'mes-activo': mes.tieneRegistros}">
+      
+      <div class="card-mes p-3 h-100" [ngClass]="{'mes-activo': mes.tieneRegistros, 'mes-vacio': !mes.tieneRegistros}">
         
         <div class="d-flex justify-content-between align-items-center mb-2 border-bottom border-secondary pb-1">
-          <h3 class="h6 m-0 font-weight-bold text-white">{{ mes.nombreMes }}</h3>
-          <span *ngIf="!mes.tieneRegistros" class="badge bg-secondary opacity-50 font-weight-normal" style="font-size: 0.6rem;">SIN DATOS</span>
-          <span *ngIf="mes.tieneRegistros" class="badge bg-success font-weight-normal" style="font-size: 0.6rem; background-color: rgba(40, 167, 69, 0.2) !important; color: #28a745;">ACTIVO</span>
+          <h3 class="h6 m-0 fw-bold text-white">{{ mes.nombreMes }}</h3>
+          <span *ngIf="!mes.tieneRegistros" class="badge-vacio text-muted">Sin registros</span>
+          <span *ngIf="mes.tieneRegistros" class="badge-activo text-success">✔ Activo</span>
         </div>
-
-        <!-- Cifras del Mes -->
-        <div class="d-flex justify-content-between align-items-center style-amounts">
-          <div class="text-start">
-            <span class="d-block text-white small-label">Inversión</span>
-            <span class="text-warning font-weight-bold">${{ mes.inversion.toFixed(2) }}</span>
+        
+        <div class="row text-center g-1 mt-2">
+          <div class="col-3">
+            <span class="d-block text-white item-titulo">Ventas</span>
+            <span class="d-block text-info fw-semibold item-monto">${{ mes.ventas.toFixed(2) }}</span>
           </div>
-          <div class="text-center px-2">
-            <span class="d-block text-white small-label">Merma</span>
-            <span class="text-danger font-weight-bold">${{ mes.merma.toFixed(2) }}</span>
+          <div class="col-3 border-start border-secondary-ajustado">
+            <span class="d-block text-white item-titulo">Inversión</span>
+            <span class="d-block text-warning fw-semibold item-monto">${{ mes.inversion.toFixed(2) }}</span>
           </div>
-          <div class="text-end">
-            <span class="d-block text-white small-label">Ganancia Libre</span>
-            <span class="text-success font-weight-bold">${{ mes.ganancia.toFixed(2) }}</span>
+          <div class="col-3 border-start border-secondary-ajustado">
+            <span class="d-block text-white item-titulo">Merma</span>
+            <span class="d-block text-danger fw-semibold item-monto">${{ mes.merma.toFixed(2) }}</span>
+          </div>
+          <div class="col-3 border-start border-secondary-ajustado">
+            <span class="d-block text-white item-titulo">Libre</span>
+            <span class="d-block text-success fw-bold item-monto">${{ mes.ganancia.toFixed(2) }}</span>
           </div>
         </div>
 
       </div>
+
     </div>
   </section>
-
 </main>

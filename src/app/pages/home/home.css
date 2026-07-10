@@ -1,0 +1,30 @@
+.btn-login {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #dcd623;
+  color: black !important; /* Forzamos color negro para que no herede el blanco */
+  padding: 12px 24px;
+  border-radius: 50px;
+  text-decoration: none !important; /* Quitamos cualquier subrayado */
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  display: inline-block; 
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.2s ease; /* Esto hace que el cambio sea suave */
+}
+
+/* Efecto al pasar el mouse por encima */
+.btn-login:hover {
+  background-color: #c4be1e;
+  box-shadow: 0 6px 8px rgba(0,0,0,0.4);
+  transform: translateY(-2px); /* Un pequeño salto hacia arriba */
+}
+
+/* Efecto al presionar (el sombreado que pediste) */
+.btn-login:active {
+  background-color: #a39e18;
+  box-shadow: inset 0 3px 5px rgba(0,0,0,0.5); /* Sombra hacia adentro al presionar */
+  transform: translateY(2px); /* Se hunde un poco */
+}

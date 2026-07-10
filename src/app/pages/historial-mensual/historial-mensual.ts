@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // <-- CORREGIDO: Importamos el despertador
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
@@ -7,12 +7,12 @@ import Swal from 'sweetalert2';
 const miSwal = Swal.mixin({
   background: '#1a1a1a',
   color: '#ffffff',
-  confirmButtonColor: 'rgb(220, 214, 35)',
+  confirmButtonColor: '#00ff88',
   cancelButtonColor: '#555555',
   customClass: { popup: 'swal-borde-amarillo' },
   didOpen: () => {
     const popup = Swal.getPopup();
-    if (popup) popup.style.border = '2px solid rgb(220, 214, 35)';
+    if (popup) popup.style.border = '2px solid #00ff88';
   }
 });
 
@@ -28,6 +28,7 @@ export class HistorialMensual implements OnInit {
   anioSeleccionado!: number;
   matrizCalendario: any[][] = [];
   
+  totalVentasMensual = 0;
   totalInversionMensual = 0;
   totalMermaMensual = 0;
   totalGananciaMensual = 0;
@@ -39,31 +40,31 @@ export class HistorialMensual implements OnInit {
     { valor: 9, nombre: 'Octubre' }, { valor: 10, nombre: 'Noviembre' }, { valor: 11, nombre: 'Diciembre' }
   ];
 
-  constructor(private supabaseService: SupabaseService) {}
+  // CORREGIDO: Inyectamos 'cdr' en el constructor
+  constructor(private supabaseService: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    const fechaActual = new Date();
-    this.mesSeleccionado = fechaActual.getMonth();
-    this.anioSeleccionado = fechaActual.getFullYear();
+    const hoy = new Date();
+    this.mesSeleccionado = hoy.getMonth();
+    this.anioSeleccionado = hoy.getFullYear();
     this.cargarYConstruirCalendario();
   }
 
   async cargarYConstruirCalendario(): Promise<void> {
-    const mesNum = Number(this.mesSeleccionado);
-    const anioNum = Number(this.anioSeleccionado);
-
-    if (isNaN(mesNum) || isNaN(anioNum) || mesNum < 0 || mesNum > 11) return;
-
     this.matrizCalendario = [];
+    this.totalVentasMensual = 0;
     this.totalInversionMensual = 0;
     this.totalMermaMensual = 0;
     this.totalGananciaMensual = 0;
+
+    const mesNum = Number(this.mesSeleccionado);
+    const anioNum = Number(this.anioSeleccionado);
 
     const ultimoDia = new Date(anioNum, mesNum + 1, 0).getDate();
     const mesStr = (mesNum + 1).toString().padStart(2, '0');
     
     const { data: registros, error } = await this.supabaseService.supabase
-      .from('cuentas_diarias')
+      .from('cuenta_diaria')
       .select('*')
       .gte('fecha', `${anioNum}-${mesStr}-01`)
       .lte('fecha', `${anioNum}-${mesStr}-${ultimoDia}`);
@@ -87,18 +88,20 @@ export class HistorialMensual implements OnInit {
           const registro = registros?.find(r => r.fecha === fechaStr);
 
           if (registro) {
-            this.totalInversionMensual += Number(registro.inversion_total || 0);
-            this.totalMermaMensual += Number(registro.merma || 0);
-            this.totalGananciaMensual += Number(registro.libre || 0);
+            this.totalVentasMensual += Number(registro.venta_bruta || 0);
+            this.totalInversionMensual += Number(registro.inversion_dia || 0);
+            this.totalMermaMensual += Number(registro.valor_merma || 0);
+            this.totalGananciaMensual += Number(registro.venta_neta_real || 0);
           }
 
           semana.push({
             numeroDia: diasContador,
             fechaCompleta: fechaStr,
             datosFinancieros: registro ? {
-              inversionTotal: registro.inversion_total,
-              merma: registro.merma,
-              libre: registro.libre
+              ventasTotal: registro.venta_bruta ?? 0,
+              inversionTotal: registro.inversion_dia ?? 0,
+              merma: registro.valor_merma ?? 0,
+              libre: registro.venta_neta_real ?? 0
             } : null
           });
           diasContador++;
@@ -107,28 +110,34 @@ export class HistorialMensual implements OnInit {
       this.matrizCalendario.push(semana);
       if (diasContador > ultimoDia) break;
     }
+
+    // CORREGIDO: Forzamos a la pantalla a dibujarse inmediatamente
+    this.cdr.detectChanges();
   }
 
   async eliminarRegistroDia(fecha: string, dia: number): Promise<void> {
     const confirmacion = await miSwal.fire({
       title: '¿Estás seguro?',
-      text: `Se eliminará el registro del día ${dia}. Esta acción no se puede deshacer.`,
+      text: `Se eliminará por completo el registro del día ${dia}.`,
       icon: 'warning',
       showCancelButton: true,
+      confirmButtonColor: '#ff4a4a',
+      cancelButtonColor: '#555555',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     });
 
     if (confirmacion.isConfirmed) {
       const { error } = await this.supabaseService.supabase
-        .from('cuentas_diarias')
+        .from('cuenta_diaria')
         .delete()
         .eq('fecha', fecha);
 
       if (error) {
-        miSwal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el registro.' });
+        console.error(error);
+        miSwal.fire({ icon: 'error', title: 'Oops!', text: 'No se pudo borrar el registro. Revisa las políticas RLS.' });
       } else {
-        miSwal.fire({ icon: 'success', title: 'Eliminado', timer: 1500 });
+        miSwal.fire({ icon: 'success', title: 'Registro eliminado', timer: 1500, showConfirmButton: false });
         this.cargarYConstruirCalendario();
       }
     }
