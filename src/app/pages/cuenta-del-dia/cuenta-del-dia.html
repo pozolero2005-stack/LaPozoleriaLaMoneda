@@ -16,9 +16,9 @@
           <h3 class="text-info h5 mb-4 border-bottom border-secondary pb-2 fw-bold">Vasos Vendidos</h3>
           
           <!-- Encabezados de columnas pequeños -->
-          <div class="row mb-2 text-muted small fw-bold">
-            <div class="col-4">Sabor</div>
-            <div class="col-4 text-center">Cantidad</div>
+          <div class="row mb-2 text-info small fw-bold">
+            <div class="col-4">Productos</div>
+            <div class="col-4 text-center">Vasos Vendidos</div>
             <div class="col-4 text-center">Precio ($)</div>
           </div>
 
@@ -74,7 +74,7 @@
           <!-- Control de Merma alineado abajo -->
           <div class="mt-auto pt-3 border-top border-secondary">
             <div class="row align-items-center">
-              <div class="col-6 text-muted small fw-bold">Valor de Merma del Día:</div>
+              <div class="col-6 text-white small fw-bold">Valor de Merma del Día:</div>
               <div class="col-6">
                 <div class="input-group">
                   <span class="input-group-text bg-dark-input border-end-0 text-danger small">$</span>
@@ -93,15 +93,15 @@
       <div class="col-12">
         <div class="row g-3 p-4 bg-dark-glass border border-success rounded text-center">
           <div class="col-md-4">
-            <span class="text-muted small d-block mb-1">Venta Bruta Total:</span>
+            <span class="text-white small d-block mb-1">Venta Bruta Total:</span>
             <h4 class="text-info m-0 fw-bold">{{ totalVentaBruta | currency }}</h4>
           </div>
           <div class="col-md-4">
-            <span class="text-muted small d-block mb-1">Inversión / Gastos:</span>
+            <span class="text-white small d-block mb-1">Inversión / Gastos:</span>
             <h4 class="text-danger m-0 fw-bold">- {{ totalGastos | currency }}</h4>
           </div>
           <div class="col-md-4">
-            <span class="text-muted small d-block mb-1">Dinero Neto Disponible:</span>
+            <span class="text-white small d-block mb-1">Dinero Neto Disponible:</span>
             <h4 class="text-success m-0 fw-bold glow-text">{{ dineroFinal | currency }}</h4>
           </div>
         </div>

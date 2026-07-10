@@ -33,7 +33,7 @@
         <div class="day-card p-2 h-100" [ngClass]="{'has-data': dia.datosFinancieros, 'empty-day': !dia.numeroDia}">
           
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="day-number fw-bold small text-muted">{{ dia.numeroDia }}</span>
+            <span class="day-number fw-bold small text-warning">{{ dia.numeroDia }}</span>
             <!-- Botón elegante para borrar jornada -->
             <button *ngIf="dia.datosFinancieros" class="btn-clear-day" (click)="eliminarRegistroDia(dia.fechaCompleta, dia.numeroDia)">✕</button>
           </div>
@@ -62,19 +62,19 @@
     <div class="col-12">
       <div class="row g-3 p-4 bg-dark-glass border border-success rounded text-center">
         <div class="col-3">
-          <span class="text-muted small d-block mb-1">Ventas totales:</span>
+          <span class="text-white small d-block mb-1">Ventas totales:</span>
           <strong class="text-info h4 m-0 fw-bold">${{ totalVentasMensual.toFixed(2) }}</strong>
         </div>
         <div class="col-3 border-start border-secondary">
-          <span class="text-muted small d-block mb-1">Inversión total:</span>
+          <span class="text-white small d-block mb-1">Inversión total:</span>
           <strong class="text-warning h4 m-0 fw-bold">${{ totalInversionMensual.toFixed(2) }}</strong>
         </div>
         <div class="col-3 border-start border-secondary">
-          <span class="text-muted small d-block mb-1">Merma total:</span>
+          <span class="text-white small d-block mb-1">Merma total:</span>
           <strong class="text-danger h4 m-0 fw-bold">${{ totalMermaMensual.toFixed(2) }}</strong>
         </div>
         <div class="col-3 border-start border-secondary">
-          <span class="text-muted small d-block mb-1">Ganancia neta:</span>
+          <span class="text-white small d-block mb-1">Ganancia neta:</span>
           <strong class="text-success h4 m-0 fw-bold glow-text">${{ totalGananciaMensual.toFixed(2) }}</strong>
         </div>
       </div>
